@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "PaperMade — Paper Trading Overlay",
+  "version": "0.9.6",
+  "description": "PaperMade private-beta overlay with exact held-amount Sell All, fixed minimize, editable Buy/Sell presets, dust-free full closes, live P&L, Avg Buy MC, sync and journal analytics.",
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://*.supabase.co/*",
+    "https://*.usepapermade.com/*",
+    "https://api.dexscreener.com/*",
+    "https://papermade.devingtrader.workers.dev/*",
+    "https://usepapermade.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://fomo.family/*",
+        "https://production.fomo.family/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "overlay.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://papermade.devingtrader.workers.dev/*",
+        "https://usepapermade.com/*",
+        "https://*.usepapermade.com/*"
+      ],
+      "js": [
+        "papermade-bridge.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "PaperMade — Paper Trading Overlay"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "bridge-page.js"
+      ],
+      "matches": [
+        "https://papermade.devingtrader.workers.dev/*",
+        "https://usepapermade.com/*",
+        "https://*.usepapermade.com/*"
+      ]
+    }
+  ]
+}
