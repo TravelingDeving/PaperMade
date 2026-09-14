@@ -47,8 +47,10 @@ See [SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md).
 ## Current build
 
 - Overlay: **v0.9.6**
-- Website: **v4.0**
+- Website: **v4.1**
 - Status: **Private Beta**
+
+Website v4.1 adds persistent navigation, public profile banners, owner-controlled moderator access, a staff feedback queue, and tighter public-profile privacy.
 
 ## Public source snapshot
 
