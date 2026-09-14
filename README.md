@@ -50,26 +50,40 @@ See [SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md).
 - Website: **v4.0**
 - Status: **Private Beta**
 
+## Public source snapshot
+
+This repository is being used as PaperMade's public transparency repository during private beta.
+
+Currently published:
+
+- the exact extension manifest / requested permissions;
+- public market-data and After-I-Sold background logic;
+- the core paper position / P&L / Avg Buy MC / Sell All math;
+- security, privacy, permission, and release documentation.
+
+The private-beta authentication/session transport is **not included in the public snapshot yet while that bridge receives a security review**. The public repository therefore should be treated as an inspection snapshot, **not the current install package**.
+
+The private-beta install package is distributed through the official PaperMade install flow.
+
 ## Repository layout
 
 ```text
-extension/   Current browser-extension source
+extension/   Public extension logic and permission snapshot
 docs/        Public documentation
 ```
 
-## Inspecting the extension
-
-1. Clone or download this repository.
-2. Open `chrome://extensions`.
-3. Enable **Developer mode**.
-4. Choose **Load unpacked**.
-5. Select the `extension` folder.
-
-PaperMade is currently a private beta, so paper-trading controls still require an approved PaperMade account.
-
 ## Transparency
 
-The source is published so traders can inspect PaperMade's permissions, storage behavior, paper-trading calculations, and account-sync behavior before installing it.
+The repository is meant to make the important trust questions easy to answer:
+
+1. What browser permissions does PaperMade request?
+2. What market sources does it read?
+3. How is simulated P&L calculated?
+4. How does Avg Buy MC work?
+5. What does Sell All actually do?
+6. Does any of this require a wallet or transaction signature? (**No.**)
+
+Read [docs/PERMISSIONS.md](docs/PERMISSIONS.md) and [extension/trading-core.js](extension/trading-core.js).
 
 **PaperMade should never ask for your seed phrase or private key.**
 
