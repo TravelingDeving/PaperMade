@@ -17,6 +17,7 @@ PaperMade is a browser-extension paper-trading overlay built for practicing meme
 - Custom dollar buys and sells
 - Editable quick-buy and sell presets
 - Optional Fast Buy
+- Live-linked Max / 100% Sell
 - Exact Sell All / Max close
 - Live Open P&L
 - Avg Buy MC
@@ -46,11 +47,13 @@ See [SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md).
 
 ## Current build
 
-- Overlay: **v0.9.6**
-- Website: **v4.1**
+- Overlay: **v0.9.7**
+- Website: **v4.2**
 - Status: **Private Beta**
 
-Website v4.1 adds persistent navigation, public profile banners, owner-controlled moderator access, a staff feedback queue, and tighter public-profile privacy.
+Website v4.2 uses compact Community / Tools / About dropdown navigation while retaining public profiles, profile banners, Friends, trader comparison, owner-controlled moderator access, staff feedback management, install/download, transparency, status and roadmap pages.
+
+Overlay v0.9.7 makes Max / 100% Sell a live-linked selection: the displayed sell amount follows the current simulated position value until the user sells or manually enters another amount.
 
 ## Public source snapshot
 
@@ -58,9 +61,9 @@ This repository is being used as PaperMade's public transparency repository duri
 
 Currently published:
 
-- the exact extension manifest / requested permissions;
+- the extension manifest / requested permissions;
 - public market-data and After-I-Sold background logic;
-- the core paper position / P&L / Avg Buy MC / Sell All math;
+- core paper position / P&L / Avg Buy MC / Sell All math;
 - security, privacy, permission, and release documentation.
 
 The private-beta authentication/session transport is **not included in the public snapshot yet while that bridge receives a security review**. The public repository therefore should be treated as an inspection snapshot, **not the current install package**.
