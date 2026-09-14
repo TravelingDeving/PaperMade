@@ -1,5 +1,20 @@
 # Changelog
 
+## Website v4.2
+- Replaced the crowded navigation button row with compact dropdown menus.
+- Community menu: Leaderboard, Trader Profiles, Friends.
+- Tools menu: Compare Traders, P&L Cards, Install.
+- About menu: GitHub & Transparency, Status + Changelog, Roadmap, Feedback / Bugs.
+- Keeps the Website v4.1 staff/moderation and profile-banner features.
+
+## Overlay v0.9.7
+- Max / 100% Sell is now live-linked to the current simulated position value.
+- After selecting Max, the visible sell amount updates as the position value changes.
+- Max button shows the live current value.
+- Max execution re-resolves the position immediately before the full close.
+- Manual dollar input cancels Max mode as before.
+- Keeps v0.9.6 exact held-quantity and dust-free full-close behavior.
+
 ## Website v4.1
 - Added persistent product/community navigation across the major website pages.
 - Added public profile banner uploads with a dedicated Supabase Storage bucket.
