@@ -1,5 +1,20 @@
 # Changelog
 
+## Website v4.1
+- Added persistent product/community navigation across the major website pages.
+- Added public profile banner uploads with a dedicated Supabase Storage bucket.
+- Added a PaperMade Staff Center for reviewing the full feedback queue.
+- Added owner-controlled moderator access by approved Discord username.
+- Moderators can move reports through new, reviewing, planned, fixed, and closed states.
+- Tightened public-profile privacy so anonymous users use sanitized RPC output instead of direct profile-table reads.
+
+## Website v4.0
+- Added public trader profiles.
+- Added Friends and friend requests.
+- Added trader comparison.
+- Added install/download, transparency, roadmap, status, and feedback pages.
+- Added feedback submission storage for approved testers.
+
 ## v0.9.6
 - Sell All / Max now uses the live held paper position as the source of truth.
 - Full closes sell the exact paper-token quantity held.
