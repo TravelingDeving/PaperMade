@@ -2,7 +2,7 @@
 
 **Real charts. Fake money. Better traders.**
 
-PaperMade is a browser-extension paper-trading overlay built for practicing meme-coin trading directly on live chart pages without risking real funds.
+PaperMade is a browser-extension paper-trading overlay for practicing meme-coin trading directly on live chart pages without risking real funds.
 
 > **Private beta:** access is currently limited to approved PaperMade Discord testers.
 
@@ -11,9 +11,10 @@ PaperMade is a browser-extension paper-trading overlay built for practicing meme
 - Paper trading only — no real transaction execution
 - No wallet connection required
 - No seed phrase or private key access
+- FOMO + Axiom overlay support
+- Axiom multichain pair-to-token resolution
 - Live chart / market-cap tracking
 - Solana and EVM contract-address detection
-- FOMO-style Buy / Sell controls
 - Custom dollar buys and sells
 - Editable quick-buy and sell presets
 - Optional Fast Buy
@@ -28,8 +29,15 @@ PaperMade is a browser-extension paper-trading overlay built for practicing meme
 - Profit-captured tracking
 - After-I-Sold tracking
 - Movable and resizable overlay
+- Adjustable overlay transparency
+- $100 default starting bankroll for new accounts
+- Selectable $100–$1,000 starting bankroll
 - Paper-trading account sync
 - Discord-gated private beta access
+- Main trader profiles
+- Friends and trader comparison
+- Server-earned achievements and featured badges
+- P&L flex cards and leaderboard
 
 ## Security model
 
@@ -43,28 +51,30 @@ PaperMade is designed so the extension does **not** need:
 
 The trading state is simulated. The extension reads public market information and can sync a signed-in user's simulated record to the PaperMade backend.
 
-See [SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md).
+PaperMade v0.9.13 also adds market-data sanity checks so an implausible host-page market-cap scrape is rejected instead of being allowed to create fake simulated P&L. A conservative repair path is used for high-confidence historical source-scale failures.
+
+See [SECURITY.md](SECURITY.md), [PRIVACY.md](PRIVACY.md), and [docs/DATA-INTEGRITY.md](docs/DATA-INTEGRITY.md).
 
 ## Current build
 
-- Overlay: **v0.9.7**
-- Website: **v4.2**
+- Overlay: **v0.9.13**
+- Website: **v4.4.1**
 - Status: **Private Beta**
 
-Website v4.2 uses compact Community / Tools / About dropdown navigation while retaining public profiles, profile banners, Friends, trader comparison, owner-controlled moderator access, staff feedback management, install/download, transparency, status and roadmap pages.
+Website v4.4.1 includes editable main trader profiles, server-earned achievements, featured badges, profile banners, Friends, trader comparison, staff moderation, feedback management, P&L cards, and a persistent Profile action beside My record across the site.
 
-Overlay v0.9.7 makes Max / 100% Sell a live-linked selection: the displayed sell amount follows the current simulated position value until the user sells or manually enters another amount.
+Overlay v0.9.13 includes FOMO + Axiom support, multichain Axiom pair resolution, a $100–$1,000 starting-bankroll system, 35%–100% overlay transparency, live-linked Max Sell, account sync, and market-data spike protection/repair.
 
 ## Public source snapshot
 
-This repository is being used as PaperMade's public transparency repository during private beta.
+This repository is PaperMade's public transparency repository during private beta.
 
 Currently published:
 
 - the extension manifest / requested permissions;
 - public market-data and After-I-Sold background logic;
 - core paper position / P&L / Avg Buy MC / Sell All math;
-- security, privacy, permission, and release documentation.
+- security, privacy, permission, data-integrity, and release documentation.
 
 The private-beta authentication/session transport is **not included in the public snapshot yet while that bridge receives a security review**. The public repository therefore should be treated as an inspection snapshot, **not the current install package**.
 
@@ -86,12 +96,13 @@ The repository is meant to make the important trust questions easy to answer:
 3. How is simulated P&L calculated?
 4. How does Avg Buy MC work?
 5. What does Sell All actually do?
-6. Does any of this require a wallet or transaction signature? (**No.**)
+6. How does PaperMade reject implausible market-data spikes?
+7. Does any of this require a wallet or transaction signature? (**No.**)
 
-Read [docs/PERMISSIONS.md](docs/PERMISSIONS.md) and [extension/trading-core.js](extension/trading-core.js).
+Read [docs/PERMISSIONS.md](docs/PERMISSIONS.md), [docs/PAPER-TRADING-MODEL.md](docs/PAPER-TRADING-MODEL.md), and [extension/trading-core.js](extension/trading-core.js).
 
 **PaperMade should never ask for your seed phrase or private key.**
 
 ## Disclaimer
 
-PaperMade simulates trades for learning and performance tracking. PaperMade P&L, leaderboards, and flex cards represent simulated results and are not proof of real-money trading performance.
+PaperMade simulates trades for learning and performance tracking. PaperMade P&L, leaderboards, achievements, and flex cards represent simulated results and are not proof of real-money trading performance.
