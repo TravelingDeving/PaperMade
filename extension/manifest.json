@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PaperMade — Paper Trading Overlay",
-  "version": "0.9.13",
-  "description": "PaperMade for FOMO and Axiom with multichain auto-detection, market-data spike protection, high-confidence P&L repair, $100–$1,000 bankroll selection and adjustable transparency.",
+  "version": "0.9.14",
+  "description": "PaperMade for FOMO and Axiom with multichain detection, early Solana/Jupiter fallback, market-data spike protection, $100–$1,000 bankrolls and adjustable transparency.",
   "permissions": [
     "storage",
     "alarms"
@@ -14,7 +14,8 @@
     "https://papermade.devingtrader.workers.dev/*",
     "https://usepapermade.com/*",
     "https://axiom.trade/*",
-    "https://*.axiom.trade/*"
+    "https://*.axiom.trade/*",
+    "https://lite-api.jup.ag/*"
   ],
   "background": {
     "service_worker": "background.js"
