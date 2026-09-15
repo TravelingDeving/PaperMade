@@ -1,5 +1,24 @@
 # Changelog
 
+## Website v4.4.3
+- Updated the site-wide release alert to distribute Overlay v0.9.15.
+- Install page now serves the v0.9.15 tracking-fix build.
+- No new SQL is required for this website release.
+- `papermade.xyz` is now the primary public PaperMade domain.
+
+## Overlay v0.9.15
+- Fixed sell presets so **25% / 50% / 75% / 100%** all stay live-linked to the changing position value, not only Max.
+- Percentage sell execution now re-resolves the live position immediately before the paper sell.
+- Manually typing a dollar amount cancels the linked percentage preset.
+- Added principal-recovered / **“initials out”** P&L display logic.
+- Once simulated sell proceeds recover the original paper principal, the remaining runner is shown as profit while internal accounting basis remains available for journal bookkeeping.
+- Fixed a host-chart regression where a nearby UI value could win merely because it was numerically closest to the reference feed.
+- Added direct Axiom token-header market-cap detection.
+- Strong semantic/chart MC matches now outrank reference-feed proximity.
+- Clears stale page MC/price values on token or route changes.
+- Manual CA mode can use the host chart when the page is clearly showing the same token/pair.
+- Added `papermade.xyz` to the extension account bridge and made it the primary login URL while keeping the old workers.dev hostname as a transition fallback.
+
 ## Website v4.4.2
 - Added a site-wide **Update Available** banner for new extension releases.
 - The banner is driven by `release.json`, so future builds can be announced without editing every page.
