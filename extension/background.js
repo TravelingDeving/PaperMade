@@ -1,5 +1,6 @@
 const STORAGE_KEY = "fomoPaperStateV01";
 const AFTER_EXIT_ALARM = "fomoPaperAfterExit";
+
 const CHECKPOINTS = {
   m5: 5,
   m15: 15,
@@ -7,41 +8,182 @@ const CHECKPOINTS = {
   h1: 60
 };
 
-async function fetchToken(address) {
+const COMMON_QUOTE_SYMBOLS = new Set([
+  "SOL", "WSOL",
+  "ETH", "WETH",
+  "BNB", "WBNB",
+  "USDC", "USDT", "USDS", "DAI",
+  "USD1", "USDG"
+]);
+
+function tokenFromPair(pair, fallbackAddress = "", preferredSide = "base") {
+  const base = pair?.baseToken || {};
+  const quote = pair?.quoteToken || {};
+  const chosen = preferredSide === "quote" ? quote : base;
+
+  return {
+    address: chosen?.address || fallbackAddress,
+    name: chosen?.name || "Unknown token",
+    symbol: chosen?.symbol || "TOKEN",
+    chainId: pair?.chainId || "",
+    dexId: pair?.dexId || "",
+    priceUsd: Number(pair?.priceUsd || 0),
+    marketCap: Number(pair?.marketCap || pair?.fdv || 0),
+    fdv: Number(pair?.fdv || 0),
+    liquidityUsd: Number(pair?.liquidity?.usd || 0),
+    pairAddress: pair?.pairAddress || "",
+    pairUrl: pair?.url || ""
+  };
+}
+
+async function fetchPairsForToken(address) {
   const encoded = encodeURIComponent(String(address || "").trim());
   if (!encoded) throw new Error("Missing token contract.");
 
-  const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${encoded}`);
-  if (!response.ok) throw new Error(`Market data request failed (${response.status})`);
+  const response = await fetch(
+    `https://api.dexscreener.com/latest/dex/tokens/${encoded}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Market data request failed (${response.status})`);
+  }
+
+  const data = await response.json();
+  return Array.isArray(data?.pairs) ? data.pairs : [];
+}
+
+function chooseTradedSide(pair) {
+  const base = pair?.baseToken || {};
+  const quote = pair?.quoteToken || {};
+
+  const baseCommon = COMMON_QUOTE_SYMBOLS.has(
+    String(base?.symbol || "").toUpperCase()
+  );
+  const quoteCommon = COMMON_QUOTE_SYMBOLS.has(
+    String(quote?.symbol || "").toUpperCase()
+  );
+
+  if (baseCommon && !quoteCommon) return "quote";
+  return "base";
+}
+
+async function resolvePairAcrossChains(pairAddress) {
+  const clean = String(pairAddress || "").trim();
+  if (!clean) return null;
+
+  // Axiom may place a DEX pool/pair address in the route rather than the token
+  // contract itself. DexScreener search is used here as a chain-agnostic pair
+  // resolver so PaperMade can map that pool back to a canonical token address.
+  const encoded = encodeURIComponent(clean);
+  const response = await fetch(
+    `https://api.dexscreener.com/latest/dex/search?q=${encoded}`
+  );
+
+  if (!response.ok) return null;
 
   const data = await response.json();
   const pairs = Array.isArray(data?.pairs) ? data.pairs : [];
-  if (!pairs.length) throw new Error("No live pair found for this contract.");
+  if (!pairs.length) return null;
 
-  pairs.sort((a, b) => (b?.liquidity?.usd || 0) - (a?.liquidity?.usd || 0));
-  const p = pairs[0];
+  const lower = clean.toLowerCase();
 
-  return {
-    address: p?.baseToken?.address || address,
-    name: p?.baseToken?.name || "Unknown token",
-    symbol: p?.baseToken?.symbol || "TOKEN",
-    chainId: p?.chainId || "",
-    dexId: p?.dexId || "",
-    priceUsd: Number(p?.priceUsd || 0),
-    marketCap: Number(p?.marketCap || p?.fdv || 0),
-    fdv: Number(p?.fdv || 0),
-    liquidityUsd: Number(p?.liquidity?.usd || 0),
-    pairAddress: p?.pairAddress || "",
-    pairUrl: p?.url || ""
-  };
+  let pair = pairs.find(
+    candidate => String(candidate?.pairAddress || "").toLowerCase() === lower
+  );
+
+  if (!pair) {
+    pair = pairs
+      .slice()
+      .sort(
+        (a, b) =>
+          Number(b?.liquidity?.usd || 0) -
+          Number(a?.liquidity?.usd || 0)
+      )[0];
+  }
+
+  if (!pair) return null;
+
+  const side = chooseTradedSide(pair);
+  const chosen = side === "quote" ? pair?.quoteToken : pair?.baseToken;
+  const tokenAddress = chosen?.address || "";
+  if (!tokenAddress) return null;
+
+  // Re-query by canonical token address and prefer the highest-liquidity pair.
+  try {
+    const tokenPairs = await fetchPairsForToken(tokenAddress);
+    if (tokenPairs.length) {
+      tokenPairs.sort(
+        (a, b) =>
+          Number(b?.liquidity?.usd || 0) -
+          Number(a?.liquidity?.usd || 0)
+      );
+
+      const best = tokenPairs[0];
+      const bestBase = String(best?.baseToken?.address || "").toLowerCase();
+      const tokenLower = tokenAddress.toLowerCase();
+
+      return tokenFromPair(
+        best,
+        tokenAddress,
+        bestBase === tokenLower ? "base" : "quote"
+      );
+    }
+  } catch (_) {}
+
+  return tokenFromPair(pair, tokenAddress, side);
+}
+
+async function fetchToken(address, { allowPairLookup = false } = {}) {
+  const clean = String(address || "").trim();
+  if (!clean) throw new Error("Missing token contract.");
+
+  let pairs = [];
+
+  try {
+    pairs = await fetchPairsForToken(clean);
+  } catch (error) {
+    if (!allowPairLookup) throw error;
+  }
+
+  if (pairs.length) {
+    pairs.sort(
+      (a, b) =>
+        Number(b?.liquidity?.usd || 0) -
+        Number(a?.liquidity?.usd || 0)
+    );
+
+    return {
+      token: tokenFromPair(pairs[0], clean),
+      resolvedFromPair: false
+    };
+  }
+
+  if (allowPairLookup) {
+    const resolved = await resolvePairAcrossChains(clean);
+    if (resolved) {
+      return {
+        token: resolved,
+        resolvedFromPair: true
+      };
+    }
+  }
+
+  throw new Error("No live token or supported pair found.");
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type !== "FETCH_TOKEN" || !message.address) return;
 
-  fetchToken(message.address)
-    .then(token => sendResponse({ ok: true, token }))
-    .catch(err => sendResponse({ ok: false, error: err.message || String(err) }));
+  fetchToken(message.address, {
+    allowPairLookup: Boolean(message.allowPairLookup)
+  })
+    .then(result => sendResponse({ ok: true, ...result }))
+    .catch(error =>
+      sendResponse({
+        ok: false,
+        error: error.message || String(error)
+      })
+    );
 
   return true;
 });
@@ -57,7 +199,10 @@ ensureAfterExitAlarm();
 async function updateAfterExitJournal() {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
   const state = stored?.[STORAGE_KEY];
-  if (!state || !Array.isArray(state.journal) || !state.journal.length) return;
+
+  if (!state || !Array.isArray(state.journal) || !state.journal.length) {
+    return;
+  }
 
   const now = Date.now();
   let changed = false;
@@ -69,11 +214,13 @@ async function updateAfterExitJournal() {
   });
 
   const byAddress = new Map();
+
   for (const entry of pendingEntries) {
     const due = Object.entries(CHECKPOINTS).filter(([key, minutes]) => {
       if (entry.afterExit?.[key]) return false;
       return now >= Number(entry.exitAt) + minutes * 60_000;
     });
+
     if (!due.length) continue;
 
     if (!byAddress.has(entry.address)) byAddress.set(entry.address, []);
@@ -82,7 +229,8 @@ async function updateAfterExitJournal() {
 
   for (const [address, jobs] of byAddress.entries()) {
     try {
-      const token = await fetchToken(address);
+      const result = await fetchToken(address);
+      const token = result.token;
       const liveReferenceMc = Number(token.marketCap || 0);
 
       for (const { entry, due } of jobs) {
@@ -114,12 +262,16 @@ async function updateAfterExitJournal() {
         entry.afterExitComplete = Object.keys(CHECKPOINTS)
           .every(key => Boolean(entry.afterExit?.[key]));
       }
-    } catch (_) {}
+    } catch (_) {
+      // Keep the checkpoint pending and retry on the next alarm.
+    }
   }
 
   if (changed) {
     await chrome.storage.local.set({ [STORAGE_KEY]: state });
-    try { await pushPaperState(state); } catch (_) {}
+
+    // Private-beta account-sync transport is intentionally excluded from the
+    // public snapshot while the authentication bridge receives security review.
   }
 }
 
@@ -129,6 +281,8 @@ chrome.alarms.onAlarm.addListener(alarm => {
   }
 });
 
-// Private-beta account-sync transport is intentionally excluded from the
-// public snapshot while the authentication bridge receives a security review.
-// Public trading behavior and UI logic live in content.js and overlay.css.
+// Public snapshot note:
+// v0.9.13's host-page market-cap sanity checks and conservative historical
+// spike-repair logic live in the production content-script layer. The private
+// auth/session transport and full production UI bundle are intentionally not
+// included in this inspection snapshot yet.
