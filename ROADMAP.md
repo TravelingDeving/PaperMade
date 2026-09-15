@@ -8,24 +8,40 @@ PaperMade's roadmap is focused on learning, tracking, transparency, and communit
 - Virtual cash / position tracking
 - Journal and After-I-Sold checkpoints
 - Movable / resizable overlay
+- Adjustable transparency
+- Configurable $100–$1,000 starting bankroll
 - Private-beta account sync
 - Discord-gated access
+- FOMO support
+- Axiom multichain support
+- Market-data sanity checks and high-confidence spike repair
 
-## Phase 2 — Community foundation 🚧
-- Global realized-P&L leaderboard
+## Phase 2 — Community foundation ✅
+- Global paper-trading leaderboard
 - P&L flex cards
-- Public trader profiles
+- Main editable trader profiles
+- Profile banners / avatars
 - Friends
 - Trader comparisons
 - Feedback / bug-report center
+- Staff moderation center
 - Public transparency repository
 
-## Phase 3 — Challenges + achievements
+## Phase 3 — Achievements + challenges 🚧
+### Shipped
+- Server-earned achievements
+- Badge rarity levels
+- Featured badge showcases
+- OG Beta Tester badge
+- Trading / milestone / community badges
+- Lifetime achievement ledger across bankroll resets
+
+### Planned
 - Weekly competitions
-- Win-streak badges
-- Top-10 badges
+- Top-10 / seasonal badges
 - Consistency awards
 - Challenge-specific leaderboards
+- Seasonal achievement sets
 
 ## Phase 4 — Deeper performance analytics
 - Equity curve
@@ -34,6 +50,7 @@ PaperMade's roadmap is focused on learning, tracking, transparency, and communit
 - Performance by hold time
 - Performance by entry market cap
 - Weekly recap cards
+- Bankroll-normalized leaderboard views for fair comparison across starting balances
 
 ## Phase 5 — Public beta
 - Polished installer
