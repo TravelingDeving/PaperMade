@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PaperMade — Paper Trading Overlay",
-  "version": "0.9.6",
-  "description": "PaperMade private-beta overlay with exact held-amount Sell All, fixed minimize, editable Buy/Sell presets, dust-free full closes, live P&L, Avg Buy MC, sync and journal analytics.",
+  "version": "0.9.13",
+  "description": "PaperMade for FOMO and Axiom with multichain auto-detection, market-data spike protection, high-confidence P&L repair, $100–$1,000 bankroll selection and adjustable transparency.",
   "permissions": [
     "storage",
     "alarms"
@@ -12,7 +12,9 @@
     "https://*.usepapermade.com/*",
     "https://api.dexscreener.com/*",
     "https://papermade.devingtrader.workers.dev/*",
-    "https://usepapermade.com/*"
+    "https://usepapermade.com/*",
+    "https://axiom.trade/*",
+    "https://*.axiom.trade/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -21,7 +23,9 @@
     {
       "matches": [
         "https://fomo.family/*",
-        "https://production.fomo.family/*"
+        "https://production.fomo.family/*",
+        "https://axiom.trade/*",
+        "https://*.axiom.trade/*"
       ],
       "js": [
         "content.js"
