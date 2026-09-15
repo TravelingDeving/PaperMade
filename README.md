@@ -13,6 +13,9 @@ PaperMade is a browser-extension paper-trading overlay for practicing meme-coin 
 - No seed phrase or private key access
 - FOMO + Axiom overlay support
 - Axiom multichain pair-to-token resolution
+- Multi-source early Solana token resolution
+- DexScreener reference/fallback data
+- Jupiter Tokens/Price fallback for Solana mints without a normal indexed DEX pair yet
 - Live chart / market-cap tracking
 - Solana and EVM contract-address detection
 - Custom dollar buys and sells
@@ -38,6 +41,7 @@ PaperMade is a browser-extension paper-trading overlay for practicing meme-coin 
 - Friends and trader comparison
 - Server-earned achievements and featured badges
 - P&L flex cards and leaderboard
+- Site-wide extension update alerts
 
 ## Security model
 
@@ -51,19 +55,19 @@ PaperMade is designed so the extension does **not** need:
 
 The trading state is simulated. The extension reads public market information and can sync a signed-in user's simulated record to the PaperMade backend.
 
-PaperMade v0.9.13 also adds market-data sanity checks so an implausible host-page market-cap scrape is rejected instead of being allowed to create fake simulated P&L. A conservative repair path is used for high-confidence historical source-scale failures.
+PaperMade also sanity-checks host-page market-cap values so an implausible DOM scrape is rejected instead of being allowed to create fake simulated P&L. A conservative repair path exists for high-confidence historical source-scale failures.
 
 See [SECURITY.md](SECURITY.md), [PRIVACY.md](PRIVACY.md), and [docs/DATA-INTEGRITY.md](docs/DATA-INTEGRITY.md).
 
 ## Current build
 
-- Overlay: **v0.9.13**
-- Website: **v4.4.1**
+- Overlay: **v0.9.14**
+- Website: **v4.4.2**
 - Status: **Private Beta**
 
-Website v4.4.1 includes editable main trader profiles, server-earned achievements, featured badges, profile banners, Friends, trader comparison, staff moderation, feedback management, P&L cards, and a persistent Profile action beside My record across the site.
+Website v4.4.2 includes editable main trader profiles, achievements/badges, profile banners, Friends, trader comparison, staff moderation, P&L cards, a persistent Profile action beside My record, and a site-wide update banner driven by `release.json` whenever a newer extension package is published.
 
-Overlay v0.9.13 includes FOMO + Axiom support, multichain Axiom pair resolution, a $100–$1,000 starting-bankroll system, 35%–100% overlay transparency, live-linked Max Sell, account sync, and market-data spike protection/repair.
+Overlay v0.9.14 keeps FOMO + Axiom multichain support, the $100–$1,000 bankroll system, transparency control, live-linked Max Sell, account sync, and market-data spike protection. It also adds a multi-source token resolver: normal DEX data first, Axiom pair resolution second, and Jupiter Tokens/Price as an early-Solana fallback.
 
 ## Public source snapshot
 
@@ -72,7 +76,7 @@ This repository is PaperMade's public transparency repository during private bet
 Currently published:
 
 - the extension manifest / requested permissions;
-- public market-data and After-I-Sold background logic;
+- public market-data, multi-source token-resolution, and After-I-Sold background logic;
 - core paper position / P&L / Avg Buy MC / Sell All math;
 - security, privacy, permission, data-integrity, and release documentation.
 
@@ -97,7 +101,8 @@ The repository is meant to make the important trust questions easy to answer:
 4. How does Avg Buy MC work?
 5. What does Sell All actually do?
 6. How does PaperMade reject implausible market-data spikes?
-7. Does any of this require a wallet or transaction signature? (**No.**)
+7. How can an early Solana token load before a normal DEX pair is indexed?
+8. Does any of this require a wallet or transaction signature? (**No.**)
 
 Read [docs/PERMISSIONS.md](docs/PERMISSIONS.md), [docs/PAPER-TRADING-MODEL.md](docs/PAPER-TRADING-MODEL.md), and [extension/trading-core.js](extension/trading-core.js).
 
