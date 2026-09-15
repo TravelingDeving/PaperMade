@@ -1,6 +1,6 @@
 # Paper-Trading Model
 
-This document summarizes the core simulation rules used by PaperMade v0.9.13.
+This document summarizes the core simulation rules used by PaperMade v0.9.15.
 
 ## Starting state
 
@@ -18,6 +18,8 @@ The current private-beta overlay supports FOMO and Axiom.
 
 Axiom pages may expose a pool/pair address instead of the canonical token contract. PaperMade resolves that public pair context into a token address before keying the simulated position so the same token is not duplicated merely because it was viewed on a different host platform.
 
+For early Solana mints, PaperMade can also fall back to public Jupiter token/price data when a normal indexed DEX pair is not yet available.
+
 ## Position value
 
 PaperMade tracks a position using a ratio between the current mark and the position's entry baseline.
@@ -33,34 +35,48 @@ When a fallback/reference feed is used, PaperMade compares that feed against the
 
 ## Market-data sanity guard
 
-PaperMade v0.9.13 cross-checks visible host-page market-cap candidates against the resolved reference feed.
+PaperMade cross-checks weak or ambiguous host-page market-cap candidates against the resolved reference feed.
 
-A page can contain many unrelated numbers near labels such as Market Cap / Price. If a candidate is implausibly far from the resolved token reference market cap, PaperMade rejects that candidate and falls back to normalized reference data.
+v0.9.15 changes the selection order so a strong semantic/chart value outranks an unrelated nearby dollar figure merely because that unrelated value is numerically closer to the reference feed. Axiom's token-header market cap is detected directly when possible.
 
-PaperMade also checks **source-scale drift**. If the relationship between host-platform MC and reference MC changes drastically compared with the relationship captured at entry, the host mark is not trusted for P&L.
+Stale host-page MC/price values are cleared on token/route changes. This prevents one token's visible data from being carried into another token's simulated position.
 
-The purpose of this guard is to prevent a DOM scrape mistake — for example accidentally reading a multi-million-dollar UI value on a token trading around a few thousand dollars of market cap — from creating fake five-figure paper profit.
+PaperMade also checks source-scale drift to protect against extreme DOM scrape failures. The purpose is to prevent a UI parsing mistake — for example accidentally reading a multi-million-dollar unrelated value on a token trading around a few thousand dollars of market cap — from creating fake five-figure paper profit.
 
 See [DATA-INTEGRITY.md](DATA-INTEGRITY.md).
 
-## Open P&L
+## Open P&L and “initials out”
+
+PaperMade keeps two concepts separate:
+
+1. **Internal accounting cost basis**, used for realized P&L and the journal.
+2. **Remaining principal**, used for the live learner-facing P&L display.
+
+Simulated sell proceeds recover remaining principal first for the display.
 
 ```text
-Open P&L $ = current paper position value - cost basis
-Open P&L % = Open P&L $ / cost basis × 100
+remaining principal = max(0, original paper capital added - net sell proceeds recovered)
+visible open profit = current position value - remaining principal
+visible return % = visible open profit / total paper capital added × 100
 ```
 
-The large Open P&L display shows:
-
-```text
-CURRENT POSITION VALUE (RETURN %) +/- DOLLAR P&L
-```
+Before any sell, this behaves like normal open P&L.
 
 Example:
 
+- Paper buy: $100
+- Position grows to $200
+- Paper sell: $100
+- Remaining runner value: $100
+- Remaining principal: $0
+
+The live display becomes:
+
 ```text
-$502.28 (-16.29%) -$97.72
+$100 position (+100%) +$100
 ```
+
+The remaining bag is therefore shown as profit after the original paper principal has been recovered, while the internal accounting basis is still retained for accurate journal bookkeeping.
 
 ## Avg Buy MC
 
@@ -89,13 +105,25 @@ Slippage is treated as a tolerance/displayed setting, not automatically deducted
 
 ## Partial sells
 
-For a partial paper sell, PaperMade removes the same fraction of cost basis, exposure basis, and held paper quantity.
+Internal accounting still removes the same fraction of cost basis, exposure basis, and held paper quantity for a partial sell.
 
-Realized P&L is:
+Realized accounting P&L is:
 
 ```text
-net simulated proceeds - removed cost basis
+net simulated proceeds - removed accounting cost basis
 ```
+
+Separately, the learner-facing remaining-principal display subtracts net sell proceeds from unrecovered principal first.
+
+## Live sell percentage presets
+
+v0.9.15 treats 25%, 50%, 75%, and 100% / Max as **live percentage intents**, not frozen dollar quotes.
+
+If a 25% sell is selected while the position is worth $100, the visible sell amount is $25. If the position then moves to $120 before execution, the selected sell amount updates to $30.
+
+At execution time PaperMade resolves the selected percentage again from the current simulated position value.
+
+Manually typing a dollar amount cancels the linked percentage preset.
 
 ## Sell All / Max
 
@@ -109,6 +137,7 @@ For a full close:
 paper quantity = 0
 cost basis = 0
 net exposure basis = 0
+remaining principal = 0
 ```
 
 This hard-zero behavior prevents simulated dust from being left behind after Max / Sell All.
@@ -119,23 +148,18 @@ When a position is fully closed, PaperMade records a journal entry including sim
 
 ## High-confidence historical repair
 
-v0.9.13 can repair an existing journal result only when the data looks like a very high-confidence source-scale failure rather than an ordinary large meme-coin move.
+PaperMade can repair an existing journal result only when the data looks like a very high-confidence source-scale failure rather than an ordinary large meme-coin move.
 
-The current repair requires both:
-
-- extreme platform/reference scale drift; and
-- an extreme recorded return.
-
-A repaired record is tagged so the same repair cannot be applied twice. If an obviously corrupted extreme MFE/captured-profit value was caused by the same bad mark, that value is also cleared/rebased.
+The repair requires both extreme platform/reference scale drift and an extreme recorded return. A repaired record is tagged so the same repair cannot be applied twice. If an obviously corrupted extreme MFE/captured-profit value was caused by the same bad mark, that value is also cleared/rebased.
 
 ## Profiles and achievements
 
 The website can derive achievements from synchronized paper-trading records. Users can choose which earned badges to feature, but performance achievements are intended to be server-derived rather than self-awarded.
 
-Website v4.4.1 revalidates performance-derived achievements after corrected paper-state data syncs, so an invalid market-data spike should not leave a false +50%/+100% style achievement behind.
+Performance-derived achievements are revalidated after corrected paper-state data syncs so an invalid market-data spike should not leave a false return badge behind.
 
 ## Leaderboards
 
 Current community leaderboards use simulated closed-trade/account records. Shared leaderboard rows, achievements, and flex cards represent **paper/simulated results**, not real-money performance.
 
-Because PaperMade now supports different starting bankrolls, bankroll-normalized leaderboard views are planned to improve fairness across users starting with different virtual balances.
+Because PaperMade supports different starting bankrolls, bankroll-normalized leaderboard views are planned to improve fairness across users starting with different virtual balances.
