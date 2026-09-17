@@ -1,5 +1,30 @@
 # Changelog
 
+## Website v4.6.3
+- Restored `calendar.html` and the P&L Calendar experience.
+- Added P&L Calendar back to the Tools dropdown.
+- Preserved the recovered leaderboard flow and restored Flex Studio image/video P&L tooling.
+- Install flow now distributes Overlay v0.10.5.
+- No new SQL is required for this release.
+
+## Overlay v0.10.5
+- Enlarged and emphasized the available paper balance in the token header.
+- Reworked chart Buy/Sell marker anchoring to use visible candle spacing when possible.
+- B/S markers re-anchor after supported host-chart zoom, pan, resize and scroll changes.
+- Removed the floating chart-trades HUD in favor of direct on-chart markers.
+- Keeps the compact full-data Trade UI and existing sub-pages.
+
+## Website v4.6.2
+- Recovery release that restored Flex Studio video/PNG P&L sharing.
+- Recovered leaderboard fallback behavior and the working website authentication config.
+- Preserved the existing profile, community and install flows.
+
+## Overlay v0.10.4
+- Reduced the minimized overlay footprint.
+- Moved the available paper balance into the token header.
+- Removed the old chart-trades summary box.
+- Strengthened direct on-chart B/S marker rendering.
+
 ## Website v4.4.3
 - Updated the site-wide release alert to distribute Overlay v0.9.15.
 - Install page now serves the v0.9.15 tracking-fix build.
