@@ -20,11 +20,16 @@
           type: "PAPERMADE_SESSION_FROM_SITE",
           payload
         });
-      } else {
+      } else if (payload?.explicitLogout) {
         chrome.runtime.sendMessage({
-          type: "PAPERMADE_SITE_LOGGED_OUT"
+          type: "PAPERMADE_SITE_LOGGED_OUT",
+          origin: payload?.origin || ""
         });
       }
+
+      // A logged-out tab by itself is not a logout event. This prevents an
+      // old workers.dev tab, a fresh claim page, or another browser tab from
+      // continuously clearing a valid papermade.xyz extension session.
     } catch (_) {}
   }
 
