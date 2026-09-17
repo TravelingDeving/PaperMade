@@ -1,38 +1,49 @@
 # PaperMade Extension — Public Beta Snapshot
 
-This directory contains the public inspection snapshot for PaperMade's private-beta browser extension.
+This directory contains PaperMade's public inspection snapshot for the private-beta browser extension.
+
+## Current private-beta build
+
+- Overlay: **v0.10.5**
+- Website: **v4.6.3**
+- Official site: **https://papermade.xyz**
 
 ## Included
 
-- `manifest.json` — current v0.9.13 permissions and supported hosts
-- `background.js` — public market-data, Axiom pair-resolution, and After-I-Sold background logic
-- `trading-core.js` — paper position, P&L, Avg Buy MC, fee mirroring, partial sell, and Sell All math
+- `manifest.json` — current v0.10.5 requested permissions and supported hosts
+- `background.js` — public market-data / pair-resolution / After-I-Sold inspection snapshot
+- `trading-core.js` — paper position, P&L, Avg Buy MC, fee mirroring, partial-sell and Sell All math
+- `papermade-bridge.js` — public browser-side website bridge loader
 
 ## Current private-beta behavior
 
-The current private-beta overlay supports:
+The production overlay supports:
 
-- FOMO token pages
-- Axiom token pages
+- FOMO, Axiom, Pump.fun and GMGN host pages
 - multichain Axiom pair-to-token resolution
+- early Solana token fallback through public Jupiter data
+- compact full-data Trade UI
+- live paper balance, Invested, Position Value, Open P&L and Avg Buy MC
+- on-chart simulated Buy/Sell markers on supported host charts
+- candle-aware B/S marker re-anchoring after supported chart zoom/pan
 - $100 default starting bankroll for new users
 - selectable $100–$1,000 starting bankrolls
 - 35%–100% overlay transparency
-- live-linked Max / 100% Sell
-- exact dust-free full closes
-- live paper P&L and Avg Buy MC
-- market-data sanity checks and high-confidence spike repair
+- live-linked percentage sells and exact Sell All / Max closes
+- market-data sanity checks and conservative high-confidence spike repair
+- trade journal, MFE/MAE, hold time and After-I-Sold tracking
+- account sync for approved private-beta users
 
-## Not yet included
+## Not included in this public snapshot
 
-The private-beta authentication/session transport and full production UI bundle are temporarily excluded while the account bridge continues to receive a security review.
+The complete production content-script UI bundle, website session injection page, and full private-beta authentication/session transport are not published here yet while those surfaces continue to receive security review.
 
-Because of that omission, **this directory is not the current install package**. The current private-beta build is distributed through the official PaperMade install flow.
+Because of those omissions, **this directory is not the install package**. The signed-in private-beta build is distributed through the official PaperMade install flow.
 
-The goal of this repository is to let users inspect the parts that matter most to the PaperMade trust model while private-beta authentication continues to evolve.
+The public repository is an inspection snapshot intended to make PaperMade's permissions, market-data model and paper-trading math easier to review.
 
 ## Security invariant
 
 PaperMade's simulator should not require a wallet connection, seed phrase, private key, custody, or permission to sign a real blockchain transaction.
 
-See [`../docs/DATA-INTEGRITY.md`](../docs/DATA-INTEGRITY.md) for the current market-data validation model.
+See [`../docs/PERMISSIONS.md`](../docs/PERMISSIONS.md), [`../docs/DATA-INTEGRITY.md`](../docs/DATA-INTEGRITY.md), and [`../docs/PAPER-TRADING-MODEL.md`](../docs/PAPER-TRADING-MODEL.md).
