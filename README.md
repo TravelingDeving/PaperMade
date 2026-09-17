@@ -11,12 +11,13 @@ PaperMade is a browser-extension paper-trading overlay for practicing meme-coin 
 - Paper trading only — no real transaction execution
 - No wallet connection required
 - No seed phrase or private key access
-- FOMO + Axiom overlay support
+- FOMO + Axiom + Pump.fun + GMGN overlay support
 - Axiom multichain pair-to-token resolution
 - Multi-source early Solana token resolution
 - DexScreener reference/fallback data
 - Jupiter Tokens/Price fallback for Solana mints without a normal indexed DEX pair yet
 - Live host-chart / market-cap tracking
+- On-chart paper Buy/Sell markers that re-anchor during supported host-chart zoom/pan
 - Solana and EVM contract-address detection
 - Custom dollar buys and sells
 - Editable quick-buy and sell presets
@@ -40,7 +41,7 @@ PaperMade is a browser-extension paper-trading overlay for practicing meme-coin 
 - Main trader profiles
 - Friends and trader comparison
 - Server-earned achievements and featured badges
-- P&L flex cards and leaderboard
+- P&L flex cards, Flex Studio image/video exports, P&L Calendar, and leaderboard
 - Site-wide extension update alerts
 
 ## Security model
@@ -61,14 +62,16 @@ See [SECURITY.md](SECURITY.md), [PRIVACY.md](PRIVACY.md), and [docs/DATA-INTEGRI
 
 ## Current build
 
-- Overlay: **v0.9.15**
-- Website: **v4.4.3**
+- Overlay: **v0.10.5**
+- Website: **v4.6.3**
 - Primary site: **https://papermade.xyz**
 - Status: **Private Beta**
 
-Website v4.4.3 keeps editable main trader profiles, achievements/badges, profile banners, Friends, trader comparison, staff moderation, P&L cards, the permanent Profile action beside My record, and the site-wide extension update banner. The current release alert distributes Overlay v0.9.15.
+Website v4.6.3 restores the P&L Calendar and places it in the Tools menu, keeps the recovered leaderboard flow, preserves the restored Flex Studio video/PNG workflow, and distributes Overlay v0.10.5 through the official install page.
 
-Overlay v0.9.15 fixes trading tracking after the multi-source resolver work. Sell percentage presets now remain live-linked to the changing position value, host chart MC selection prioritizes the correct semantic/chart value instead of the closest unrelated dollar figure, stale page values are cleared on token changes, and manual CA mode can use the host chart when it is clearly the same token. It also adds principal-recovered (“initials out”) display logic: once simulated sell proceeds have recovered the original paper principal, the remaining runner is displayed as profit while internal accounting basis is retained for the journal.
+Overlay v0.10.5 keeps the compact data-first Trade UI, makes the available paper balance easier to read in the token header, removes the old floating chart-trades HUD, and makes the on-chart simulated **B/S** markers candle-aware so they re-anchor as supported host charts are zoomed, panned, resized, or scrolled.
+
+PaperMade remains paper-only: the overlay does not need a wallet connection, seed phrase, private key, custody, or blockchain transaction signing.
 
 ## Public source snapshot
 
