@@ -206,6 +206,143 @@ async function pushState(state) {
 }
 
 
+
+async function publishNative(message) {
+  try {
+    if (!api.runtime?.sendNativeMessage) return null;
+    return await api.runtime.sendNativeMessage(message);
+  } catch (_) {
+    return null;
+  }
+}
+
+async function publishPaperState(state, sync = null) {
+  return publishNative({
+    type: "PM_NATIVE_PAPER_STATE",
+    state: state || null,
+    syncStatus: sync || null,
+    updatedAt: Date.now()
+  });
+}
+
+async function fetchMyProfileSnapshot(account) {
+  if (!accountConfigured(account)) return null;
+
+  const userId = encodeURIComponent(account.user.id);
+  const profileResponse = await supabaseFetch(
+    account,
+    `/rest/v1/papermade_public_profiles?select=display_name,bio,favorite_chain,trading_style,x_handle,public_enabled,banner_path,avatar_path,featured_badges&user_id=eq.${userId}&limit=1`,
+    {method:"GET"}
+  );
+
+  let profile = null;
+  if (profileResponse.ok) {
+    const rows = await profileResponse.json();
+    profile = Array.isArray(rows) && rows.length ? rows[0] : null;
+  }
+
+  let badges = [];
+  try {
+    const badgesResponse = await supabaseFetch(
+      account,
+      "/rest/v1/rpc/get_my_papermade_badges",
+      {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:"{}"
+      }
+    );
+    if (badgesResponse.ok) {
+      const data = await badgesResponse.json();
+      badges = Array.isArray(data) ? data : [];
+    }
+  } catch (_) {}
+
+  const access = await checkAccess(account);
+
+  return {
+    discordUsername: access.discordUsername || "",
+    profile,
+    badges
+  };
+}
+
+async function fetchLeaderboardSnapshot(account, period = "all") {
+  if (!accountConfigured(account)) return [];
+
+  const response = await supabaseFetch(
+    account,
+    "/rest/v1/rpc/get_papermade_leaderboard",
+    {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({p_period:period})
+    }
+  );
+
+  if (response.ok) {
+    const rows = await response.json();
+    if (Array.isArray(rows) && rows.length) return rows;
+  }
+
+  if (period !== "all") return [];
+
+  // Recovery fallback mirrors the website: use the public trader directory
+  // when the all-time leaderboard RPC is missing/stale.
+  const directoryResponse = await supabaseFetch(
+    account,
+    "/rest/v1/rpc/list_papermade_public_traders",
+    {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({p_query:""})
+    }
+  );
+  if (!directoryResponse.ok) return [];
+
+  const directory = await directoryResponse.json();
+  if (!Array.isArray(directory)) return [];
+
+  return directory.slice(0,50).map((row,index)=>({
+    discord_username: row.discord_username || "",
+    realized_pnl: Number(row.realized_pnl || 0),
+    win_rate: Number(row.win_rate || 0),
+    closed_trades: Number(row.closed_trades || 0),
+    avg_return: Number(row.avg_return || 0),
+    best_trade: Number(row.best_trade || 0),
+    paper_balance: Number(row.paper_balance || 0),
+    rank: Number(row.global_rank || index + 1),
+    is_me: false,
+    recovered: true
+  }));
+}
+
+async function publishSocialSnapshot(period = "all") {
+  const account = await getAccount();
+  if (!accountConfigured(account)) {
+    return {ok:false,connected:false};
+  }
+
+  const [profile, leaderboard] = await Promise.all([
+    fetchMyProfileSnapshot(account),
+    fetchLeaderboardSnapshot(account, period)
+  ]);
+
+  const snapshot = {
+    period,
+    profile,
+    leaderboard,
+    updatedAt: Date.now()
+  };
+
+  await publishNative({
+    type:"PM_NATIVE_SOCIAL_SNAPSHOT",
+    snapshot
+  });
+
+  return {ok:true,connected:true,snapshot};
+}
+
 api.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message?.type) return;
 
@@ -242,7 +379,7 @@ api.runtime.onMessage.addListener((message, sender, sendResponse) => {
     getAccount().then(async account=>{
       const configured=accountConfigured(account);
       const access=configured?await checkAccess(account):{approved:false,signedIn:false,reason:"PaperMade login required"};
-      sendResponse?.({
+      const status = {
         ok:true,
         connected:Boolean(configured&&access.approved),
         signedIn:Boolean(configured),
@@ -250,18 +387,51 @@ api.runtime.onMessage.addListener((message, sender, sendResponse) => {
         discordUsername:access.discordUsername||"",
         reason:access.reason||"",
         user:account?.user?{id:account.user.id,email:account.user.email||""}:null
-      });
+      };
+      publishNative({
+        type:"PM_NATIVE_SYNC_STATUS",
+        syncStatus:status,
+        updatedAt:Date.now()
+      }).catch(()=>{});
+      sendResponse?.(status);
     });
     return true;
   }
 
   if (message.type === "PULL_PAPERMADE_STATE") {
-    pullState().then(sendResponse).catch(error=>sendResponse?.({ok:false,error:error?.message||String(error)}));
+    pullState()
+      .then(async result => {
+        if (result?.ok && result?.row?.state) {
+          await publishPaperState(result.row.state, {
+            connected:true,
+            approved:true
+          });
+        }
+        sendResponse?.(result);
+      })
+      .catch(error=>sendResponse?.({ok:false,error:error?.message||String(error)}));
     return true;
   }
 
   if (message.type === "PUSH_PAPERMADE_STATE") {
-    pushState(message.state).then(sendResponse).catch(error=>sendResponse?.({ok:false,error:error?.message||String(error)}));
+    pushState(message.state)
+      .then(async result => {
+        if (result?.ok) {
+          await publishPaperState(message.state, {
+            connected:true,
+            approved:true
+          });
+        }
+        sendResponse?.(result);
+      })
+      .catch(error=>sendResponse?.({ok:false,error:error?.message||String(error)}));
+    return true;
+  }
+
+  if (message.type === "PM_MOBILE_REFRESH_SOCIAL") {
+    publishSocialSnapshot(message.period || "all")
+      .then(sendResponse)
+      .catch(error=>sendResponse?.({ok:false,error:error?.message||String(error)}));
     return true;
   }
 
