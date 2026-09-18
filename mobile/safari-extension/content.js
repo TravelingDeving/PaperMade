@@ -184,9 +184,12 @@
       await runtimeMessage({type:"OPEN_PAPERMADE_LOGIN"});
     });
 
-    sheet.querySelectorAll("[data-page-target]").forEach(btn=>btn.addEventListener("click",()=>{
+    sheet.querySelectorAll("[data-page-target]").forEach(btn=>btn.addEventListener("click",async()=>{
       page=btn.dataset.pageTarget;
       renderPages();
+      if (page === "more" && syncStatus.connected) {
+        await runtimeMessage({type:"PM_MOBILE_REFRESH_SOCIAL",period:"all"});
+      }
     }));
 
     sheet.querySelectorAll("[data-url]").forEach(btn=>btn.addEventListener("click",()=>{
