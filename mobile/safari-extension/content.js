@@ -3,14 +3,15 @@
   window.__PAPERMADE_MOBILE__ = true;
 
   const api = globalThis.browser || globalThis.chrome;
-  const KEY = "papermadeMobileStateV01";
-  const DEFAULT_STATE = {cash:100, startingBalance:100, positions:{}, trades:[]};
+  const KEY = "fomoPaperStateV01";
+  const DEFAULT_STATE = {cash:100, startingBalance:100, positions:{}, trades:[], journal:[], calendarDays:{}};
 
   let state = {...DEFAULT_STATE};
   let token = null;
   let address = "";
   let mode = "buy";
   let timer = null;
+  let syncStatus = {connected:false,signedIn:false,approved:false,discordUsername:""};
 
   const money = n => "$" + Number(n || 0).toFixed(2);
   const compact = n => {
@@ -51,13 +52,54 @@
     return {value,pnl,pct};
   }
 
+  function runtimeMessage(payload) {
+    return new Promise(resolve => {
+      let settled=false;
+      const done=value=>{if(!settled){settled=true;resolve(value||{});}};
+      try {
+        const maybe=api.runtime.sendMessage(payload, done);
+        if (maybe && typeof maybe.then === "function") {
+          maybe.then(done).catch(()=>done({}));
+        }
+      } catch (_) {
+        done({});
+      }
+    });
+  }
+
+  async function refreshSyncStatus() {
+    const status=await runtimeMessage({type:"GET_PAPERMADE_SYNC_STATUS"});
+    syncStatus={
+      connected:Boolean(status?.connected),
+      signedIn:Boolean(status?.signedIn),
+      approved:Boolean(status?.approved),
+      discordUsername:status?.discordUsername||""
+    };
+    return syncStatus;
+  }
+
   async function load() {
     const got=await api.storage.local.get(KEY);
     state={...DEFAULT_STATE,...(got?.[KEY]||{})};
+
+    await refreshSyncStatus();
+
+    if (syncStatus.connected) {
+      const remote=await runtimeMessage({type:"PULL_PAPERMADE_STATE"});
+      if (remote?.ok && remote?.row?.state) {
+        state={...DEFAULT_STATE,...remote.row.state};
+        await api.storage.local.set({[KEY]:state});
+      } else if (remote?.ok && !remote?.row && (state.trades?.length || Object.keys(state.positions||{}).length)) {
+        await runtimeMessage({type:"PUSH_PAPERMADE_STATE",state});
+      }
+    }
   }
 
   async function save() {
     await api.storage.local.set({[KEY]:state});
+    if (syncStatus.connected) {
+      await runtimeMessage({type:"PUSH_PAPERMADE_STATE",state});
+    }
   }
 
   function shell() {
@@ -90,7 +132,8 @@
       <div class="pm-quick" id="pm-quick"></div>
       <div class="pm-row"><span>Paper only • no wallet signing</span><button class="pm-max" id="pm-max">Max</button></div>
       <button id="pm-trade" class="pm-trade">Paper Buy</button>
-      <div id="pm-note" class="pm-note">PaperMade Mobile alpha • local paper state</div>
+      <button id="pm-account" class="pm-account">Connect PaperMade account</button>
+      <div id="pm-note" class="pm-note">Mobile alpha • paper only</div>
     `;
 
     document.documentElement.append(pill,sheet);
@@ -103,6 +146,10 @@
       input.value=mode==="buy"?Number(state.cash||0).toFixed(2):Number(metrics().value||0).toFixed(2);
     });
     sheet.querySelector("#pm-trade").addEventListener("click",trade);
+    sheet.querySelector("#pm-account").addEventListener("click",async()=>{
+      if (syncStatus.connected) return;
+      await runtimeMessage({type:"OPEN_PAPERMADE_LOGIN"});
+    });
   }
 
   function quickButtons() {
@@ -195,6 +242,20 @@
     document.querySelector("#pm-pill-token").textContent="$"+symbol;
     document.querySelector("#pm-pill-pnl").textContent=pos?`${m.pct>=0?"+":""}${m.pct.toFixed(2)}%`:"PAPER";
 
+    const account=document.querySelector("#pm-account");
+    if (account) {
+      if (syncStatus.connected) {
+        account.textContent=`Synced • ${syncStatus.discordUsername||"PaperMade"}`;
+        account.classList.add("pm-synced");
+      } else if (syncStatus.signedIn && !syncStatus.approved) {
+        account.textContent="PaperMadeTester access required";
+        account.classList.remove("pm-synced");
+      } else {
+        account.textContent="Connect PaperMade account";
+        account.classList.remove("pm-synced");
+      }
+    }
+
     document.querySelectorAll(".pm-tab").forEach(btn=>btn.classList.toggle("pm-active",btn.dataset.mode===mode));
     const tradeBtn=document.querySelector("#pm-trade");
     tradeBtn.textContent=mode==="buy"?`Paper Buy $${symbol}`:`Paper Sell $${symbol}`;
@@ -223,6 +284,18 @@
     await refreshMarket();
     clearInterval(timer);
     timer=setInterval(refreshMarket,5000);
+    setInterval(async()=>{
+      const before=syncStatus.connected;
+      await refreshSyncStatus();
+      if (!before && syncStatus.connected) {
+        const remote=await runtimeMessage({type:"PULL_PAPERMADE_STATE"});
+        if (remote?.ok && remote?.row?.state) {
+          state={...DEFAULT_STATE,...remote.row.state};
+          await api.storage.local.set({[KEY]:state});
+        }
+      }
+      render();
+    },5000);
   }
 
   start().catch(()=>{});
