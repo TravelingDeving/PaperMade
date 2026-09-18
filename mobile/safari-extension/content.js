@@ -23,17 +23,61 @@
     return money(v);
   };
 
+  function isEvmAddress(value) {
+    return /^0x[a-fA-F0-9]{40}$/.test(String(value || "").trim());
+  }
+
+  function isSolanaAddress(value) {
+    const v=String(value || "").trim();
+    return v.length >= 32 && v.length <= 44 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(v);
+  }
+
+  function normalizeCandidate(value) {
+    const raw=decodeURIComponent(String(value || "")).trim().replace(/[?#].*$/,"");
+    if(isEvmAddress(raw) || isSolanaAddress(raw)) return raw;
+
+    const evm=raw.match(/0x[a-fA-F0-9]{40}/);
+    if(evm) return evm[0];
+
+    const parts=raw.split(/[^1-9A-HJ-NP-Za-km-z]+/).filter(Boolean);
+    return parts.find(isSolanaAddress) || "";
+  }
+
   function findAddress() {
-    const text = location.href + " " + location.pathname + " " + location.search;
-    const evm = text.match(/0x[a-fA-F0-9]{40}/);
-    if (evm) return evm[0];
+    // Prefer explicit token/contract parameters when host sites expose them.
+    const params=new URLSearchParams(location.search);
+    const keys=["address","token","tokenAddress","contract","contractAddress","mint","ca","pair","pairAddress"];
+    for(const key of keys){
+      const candidate=normalizeCandidate(params.get(key));
+      if(candidate) return candidate;
+    }
 
-    const parts = decodeURIComponent(location.pathname + " " + location.search)
-      .split(/[^1-9A-HJ-NP-Za-km-z]+/)
-      .filter(Boolean);
+    // Most supported hosts include the mint/contract or pair in the route.
+    const routeCandidate=normalizeCandidate(location.pathname);
+    if(routeCandidate) return routeCandidate;
 
-    const sol = parts.find(x => x.length >= 32 && x.length <= 44 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(x));
-    return sol || "";
+    // SPA routes sometimes keep the token address in a trading link or data attr.
+    const selectors=[
+      "[data-token-address]","[data-contract-address]","[data-mint]","[data-address]",
+      "a[href*='/coin/']","a[href*='/token/']","a[href*='/meme/']"
+    ];
+    for(const selector of selectors){
+      const el=document.querySelector(selector);
+      if(!el) continue;
+      const values=[
+        el.getAttribute?.("data-token-address"),
+        el.getAttribute?.("data-contract-address"),
+        el.getAttribute?.("data-mint"),
+        el.getAttribute?.("data-address"),
+        el.getAttribute?.("href")
+      ];
+      for(const value of values){
+        const candidate=normalizeCandidate(value);
+        if(candidate) return candidate;
+      }
+    }
+
+    return "";
   }
 
   function position() {
@@ -51,6 +95,35 @@
     const pnl=value-Number(pos.costBasis||0);
     const pct=Number(pos.costBasis||0)>0 ? pnl/Number(pos.costBasis)*100 : 0;
     return {value,pnl,pct};
+  }
+
+  function calendarKey(at=Date.now()) {
+    const d=new Date(at);
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
+    const day=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function addClosedTradeToLedger(closed) {
+    if(!Array.isArray(state.journal)) state.journal=[];
+    if(!state.calendarDays || typeof state.calendarDays!=="object") state.calendarDays={};
+
+    state.journal.push(closed);
+    if(state.journal.length>500) state.journal=state.journal.slice(-500);
+
+    const key=calendarKey(closed.exitAt);
+    const current=state.calendarDays[key] || {
+      pnl:0,trades:0,wins:0,losses:0,bestReturn:null,worstReturn:null
+    };
+    const ret=Number(closed.returnPercent || 0);
+    current.pnl=Number(current.pnl || 0)+Number(closed.realizedPnl || 0);
+    current.trades=Number(current.trades || 0)+1;
+    if(Number(closed.realizedPnl || 0)>=0) current.wins=Number(current.wins || 0)+1;
+    else current.losses=Number(current.losses || 0)+1;
+    current.bestReturn=current.bestReturn==null?ret:Math.max(Number(current.bestReturn),ret);
+    current.worstReturn=current.worstReturn==null?ret:Math.min(Number(current.worstReturn),ret);
+    state.calendarDays[key]=current;
   }
 
   function runtimeMessage(payload) {
@@ -296,7 +369,23 @@
 
     if(mode==="buy") {
       if(amount>state.cash) return;
-      const old=position()||{symbol:token.symbol,qty:0,costBasis:0,netExposureBasis:0,avgEntryPrice:0,avgEntryMc:0,firstEntryAt:Date.now()};
+      const old=position()||{
+        symbol:token.symbol,
+        chainId:token.chainId||"",
+        qty:0,
+        costBasis:0,
+        netExposureBasis:0,
+        avgEntryPrice:0,
+        avgEntryMc:0,
+        totalCostAdded:0,
+        totalSellProceeds:0,
+        totalRealizedPnl:0,
+        highestMc:Number(token.marketCap||0),
+        lowestMc:Number(token.marketCap||0),
+        maxPnlPercent:0,
+        minPnlPercent:0,
+        firstEntryAt:Date.now()
+      };
       const oldCost=Number(old.costBasis||0);
       const price=Number(token.priceUsd||0);
       const qty=price>0?amount/price:0;
@@ -304,9 +393,15 @@
       old.qty=Number(old.qty||0)+qty;
       old.costBasis=newCost;
       old.netExposureBasis=Number(old.netExposureBasis||0)+amount;
+      old.totalCostAdded=Number(old.totalCostAdded||0)+amount;
       old.avgEntryPrice=old.qty>0?Number(old.netExposureBasis)/old.qty:0;
       old.avgEntryMc=newCost>0?((Number(old.avgEntryMc||0)*oldCost)+(Number(token.marketCap||0)*amount))/newCost:Number(token.marketCap||0);
       old.symbol=token.symbol;
+      old.chainId=token.chainId||old.chainId||"";
+      if(Number(token.marketCap||0)>0){
+        old.highestMc=Math.max(Number(old.highestMc||0),Number(token.marketCap));
+        old.lowestMc=Number(old.lowestMc||0)>0?Math.min(Number(old.lowestMc),Number(token.marketCap)):Number(token.marketCap);
+      }
       state.positions[address]=old;
       state.cash-=amount;
       state.trades.push({type:"BUY",address,symbol:token.symbol,usd:amount,marketCap:Number(token.marketCap||0),at:Date.now()});
@@ -317,17 +412,62 @@
       const requested=Math.min(amount,m.value);
       const fraction=m.value>0?Math.min(1,requested/m.value):0;
       if(fraction<=0) return;
+
+      const now=Date.now();
       const hard=fraction>=0.999999;
+      const costBefore=Number(pos.costBasis||0);
+      const exposureBefore=Number(pos.netExposureBasis ?? pos.costBasis || 0);
+      const qtyBefore=Number(pos.qty||0);
       const proceeds=hard?m.value:m.value*fraction;
-      const costRemoved=hard?Number(pos.costBasis||0):Number(pos.costBasis||0)*fraction;
+      const costRemoved=hard?costBefore:costBefore*fraction;
       const realized=proceeds-costRemoved;
+      const qtySold=hard?qtyBefore:qtyBefore*fraction;
+
+      pos.totalSellProceeds=Number(pos.totalSellProceeds||0)+proceeds;
+      pos.totalRealizedPnl=Number(pos.totalRealizedPnl||0)+realized;
+
       state.cash+=proceeds;
-      state.trades.push({type:"SELL",address,symbol:token.symbol,usd:proceeds,marketCap:Number(token.marketCap||0),realizedPnl:realized,at:Date.now()});
-      if(hard){delete state.positions[address];}
-      else {
-        pos.costBasis=Math.max(0,Number(pos.costBasis||0)-costRemoved);
-        pos.netExposureBasis=Math.max(0,Number(pos.netExposureBasis||0)*(1-fraction));
-        pos.qty=Math.max(0,Number(pos.qty||0)*(1-fraction));
+      state.trades.push({
+        type:"SELL",
+        address,
+        symbol:token.symbol,
+        usd:proceeds,
+        qty:qtySold,
+        marketCap:Number(token.marketCap||0),
+        realizedPnl:realized,
+        at:now
+      });
+
+      if(hard){
+        const totalCost=Number(pos.totalCostAdded||costBefore||0);
+        const totalRealized=Number(pos.totalRealizedPnl||0);
+        const returnPercent=totalCost>0?(totalRealized/totalCost)*100:0;
+        const closed={
+          id:`${now}-${address.slice(0,8)}`,
+          address,
+          symbol:pos.symbol||token.symbol||"TOKEN",
+          chainId:pos.chainId||token.chainId||"",
+          entryAt:Number(pos.firstEntryAt||now),
+          exitAt:now,
+          holdMs:Math.max(0,now-Number(pos.firstEntryAt||now)),
+          avgEntryMc:Number(pos.avgEntryMc||0),
+          exitMc:Number(token.marketCap||0),
+          highestMc:Number(pos.highestMc||token.marketCap||0),
+          lowestMc:Number(pos.lowestMc||token.marketCap||0),
+          maxPnlPercent:Number(pos.maxPnlPercent||0),
+          minPnlPercent:Number(pos.minPnlPercent||0),
+          totalCost,
+          totalProceeds:Number(pos.totalSellProceeds||proceeds),
+          realizedPnl:totalRealized,
+          returnPercent,
+          capturedPercent:null
+        };
+        addClosedTradeToLedger(closed);
+        delete state.positions[address];
+      } else {
+        pos.costBasis=Math.max(0,costBefore-costRemoved);
+        pos.netExposureBasis=Math.max(0,exposureBefore*(1-fraction));
+        pos.qty=Math.max(0,qtyBefore-qtySold);
         state.positions[address]=pos;
       }
     }
@@ -402,6 +542,20 @@
       if(response?.ok){
         token=response.token;
         if(token?.address) address=token.address;
+
+        const pos=position();
+        if(pos){
+          const mc=Number(token?.marketCap||0);
+          const m=metrics();
+          if(mc>0){
+            pos.highestMc=Math.max(Number(pos.highestMc||0),mc);
+            pos.lowestMc=Number(pos.lowestMc||0)>0?Math.min(Number(pos.lowestMc),mc):mc;
+          }
+          pos.maxPnlPercent=Math.max(Number(pos.maxPnlPercent||0),Number(m.pct||0));
+          pos.minPnlPercent=Math.min(Number(pos.minPnlPercent||0),Number(m.pct||0));
+          state.positions[address]=pos;
+        }
+
         render();
       }
     });
