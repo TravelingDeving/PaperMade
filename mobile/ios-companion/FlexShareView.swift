@@ -7,11 +7,11 @@ struct FlexShareView: View {
     @State private var showShare = false
 
     private var realizedPnl: Double {
-        store.trades.compactMap(\.realizedPnl).reduce(0, +)
+        store.totalRealizedPnl
     }
 
     private var closedTrades: Int {
-        store.trades.filter { $0.type == "SELL" }.count
+        store.closedTrades.count
     }
 
     var body: some View {
