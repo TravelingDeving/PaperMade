@@ -41,6 +41,28 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
             defaults?.set(Date().timeIntervalSince1970, forKey: "socialUpdatedAt")
             reply(context: context, payload: ["ok": true])
 
+        case "PM_NATIVE_PULL_STATE":
+            let dirty = defaults?.bool(forKey: "nativePaperStateDirty") ?? false
+            if dirty,
+               let data = defaults?.data(forKey: "paperStateJSON"),
+               let object = try? JSONSerialization.jsonObject(with: data) {
+                reply(context: context, payload: [
+                    "ok": true,
+                    "dirty": true,
+                    "state": object
+                ])
+            } else {
+                reply(context: context, payload: [
+                    "ok": true,
+                    "dirty": false
+                ])
+            }
+
+        case "PM_NATIVE_MARK_SYNCED":
+            defaults?.set(false, forKey: "nativePaperStateDirty")
+            defaults?.synchronize()
+            reply(context: context, payload: ["ok": true])
+
         default:
             reply(context: context, payload: ["ok": true, "ignored": true])
         }
