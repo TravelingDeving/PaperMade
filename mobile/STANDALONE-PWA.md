@@ -56,3 +56,19 @@ PaperMade remains paper-only. The PWA:
 ## Native path
 
 The existing native iOS + Safari Extension work remains on this branch. If users adopt the standalone beta, it can be packaged into the native app later after Apple Developer Program enrollment.
+
+
+## v4.8.2 live-data behavior
+
+The mobile beta no longer shows prediction-style Market Read / LOW RISK scoring on the token page.
+
+It now emphasizes factual live market flow:
+- open token market data refresh: about every 2 seconds;
+- current visible candle is updated from that same live market feed;
+- historical OHLCV backfill: about every 15 seconds;
+- Discover card metrics: about every 6 seconds;
+- Trending / New / Movers / Volume membership/ranking refresh: about every 30 seconds;
+- open Positions marks: about every 5 seconds while the Positions page is visible;
+- Solana security intelligence: about every 30 seconds while the token is open.
+
+A failed historical candle refresh no longer covers an already-working chart with an unavailable message. The last good history remains visible while live current-market updates continue.
