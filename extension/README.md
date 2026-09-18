@@ -4,13 +4,13 @@ This directory contains PaperMade's public inspection snapshot for the private-b
 
 ## Current private-beta build
 
-- Overlay: **v0.10.5**
-- Website: **v4.6.3**
+- Overlay: **v0.10.6**
+- Website: **v4.6.4**
 - Official site: **https://papermade.xyz**
 
 ## Included
 
-- `manifest.json` — current v0.10.5 requested permissions and supported hosts
+- `manifest.json` — current v0.10.6 requested permissions and supported hosts
 - `background.js` — public market-data / pair-resolution / After-I-Sold inspection snapshot
 - `trading-core.js` — paper position, P&L, Avg Buy MC, fee mirroring, partial-sell and Sell All math
 - `papermade-bridge.js` — public browser-side website bridge loader
@@ -24,6 +24,7 @@ The production overlay supports:
 - early Solana token fallback through public Jupiter data
 - compact full-data Trade UI
 - live paper balance, Invested, Position Value, Open P&L and Avg Buy MC
+- seven-figure market-cap P&L precision that avoids sticky P&L when host M-scale labels are rounded
 - on-chart simulated Buy/Sell markers on supported host charts
 - candle-aware B/S marker re-anchoring after supported chart zoom/pan
 - $100 default starting bankroll for new users
