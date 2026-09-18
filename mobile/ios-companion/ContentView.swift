@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var store: PaperMadeStore
+    @AppStorage("pmHasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var selectedTab = 0
 
     var body: some View {
@@ -31,6 +32,15 @@ struct ContentView: View {
             .tag(3)
         }
         .tint(.green)
+        .fullScreenCover(isPresented: Binding(
+            get: { !hasSeenOnboarding },
+            set: { if !$0 { hasSeenOnboarding = true } }
+        )) {
+            OnboardingView(isPresented: Binding(
+                get: { !hasSeenOnboarding },
+                set: { if !$0 { hasSeenOnboarding = true } }
+            ))
+        }
     }
 }
 
@@ -61,20 +71,26 @@ private struct TradeHomeView: View {
                     Text("Open FOMO, Axiom, Pump.fun or GMGN in Safari. PaperMade appears as a small pill at the bottom of the page. Tap it to open the mobile paper-trading sheet.")
                         .foregroundStyle(.secondary)
 
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                        SiteButton(title: "Pump.fun", url: "https://pump.fun/")
+                        SiteButton(title: "Axiom", url: "https://axiom.trade/")
+                        SiteButton(title: "GMGN", url: "https://gmgn.ai/")
+                        SiteButton(title: "FOMO", url: "https://fomo.family/")
+                    }
+
                     Button {
                         if let url = URL(string: "https://papermade.xyz") {
                             UIApplication.shared.open(url)
                         }
                     } label: {
                         HStack {
-                            Image(systemName: "safari")
-                            Text("Open PaperMade in Safari")
+                            Image(systemName: "person.crop.circle")
+                            Text("Open PaperMade Account")
                                 .fontWeight(.bold)
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
+                    .buttonStyle(.bordered)
                 }
                 .padding()
                 .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
@@ -111,6 +127,31 @@ private struct TradeHomeView: View {
         }
         .navigationTitle("Trade")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct SiteButton: View {
+    let title: String
+    let url: String
+
+    var body: some View {
+        Button {
+            guard let destination = URL(string: url) else { return }
+            UIApplication.shared.open(destination)
+        } label: {
+            HStack {
+                Image(systemName: "safari")
+                Text(title)
+                    .fontWeight(.bold)
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+            .padding(.horizontal, 12)
+        }
+        .buttonStyle(.bordered)
     }
 }
 
