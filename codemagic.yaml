@@ -1,0 +1,52 @@
+workflows:
+  papermade-ios-testflight:
+    name: PaperMade iOS TestFlight
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: xyz.papermade.app
+      vars:
+        XCODE_PROJECT: "mobile/xcodegen/PaperMadeMobile.xcodeproj"
+        XCODE_SCHEME: "PaperMade"
+        APP_BUNDLE_ID: "xyz.papermade.app"
+      xcode: latest
+
+    scripts:
+      - name: Install XcodeGen
+        script: |
+          brew install xcodegen
+
+      - name: Generate PaperMade Xcode project
+        script: |
+          cd "$CM_BUILD_DIR/mobile/xcodegen"
+          xcodegen generate --spec project.yml
+
+      - name: Verify generated targets
+        script: |
+          cd "$CM_BUILD_DIR/mobile/xcodegen"
+          xcodebuild -project PaperMadeMobile.xcodeproj -list
+
+      - name: Apply provisioning profiles
+        script: |
+          cd "$CM_BUILD_DIR"
+          xcode-project use-profiles
+
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
