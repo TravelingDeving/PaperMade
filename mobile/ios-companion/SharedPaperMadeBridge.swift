@@ -27,6 +27,25 @@ enum SharedPaperMadeBridge {
         date(forKey: "socialUpdatedAt")
     }
 
+    static func writePaperState(_ data: Data, markDirty: Bool) {
+        defaults?.set(data, forKey: "paperStateJSON")
+        defaults?.set(Date().timeIntervalSince1970, forKey: "paperStateUpdatedAt")
+        if markDirty {
+            defaults?.set(true, forKey: "nativePaperStateDirty")
+        }
+        defaults?.synchronize()
+    }
+
+    static func dirtyPaperStateData() -> Data? {
+        guard defaults?.bool(forKey: "nativePaperStateDirty") == true else { return nil }
+        return paperStateData()
+    }
+
+    static func clearDirtyPaperState() {
+        defaults?.set(false, forKey: "nativePaperStateDirty")
+        defaults?.synchronize()
+    }
+
     private static func date(forKey key: String) -> Date? {
         let raw = defaults?.double(forKey: key) ?? 0
         return raw > 0 ? Date(timeIntervalSince1970: raw) : nil
