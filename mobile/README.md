@@ -1,12 +1,12 @@
-# PaperMade Mobile
+# Paper Made
 
-## Standalone PWA priority — Website v4.8.0
+## Mobile beta priority — Website v4.8.0
 
-The free mobile beta now prioritizes PaperMade's own standalone market viewer + paper trader at `papermade.xyz/mobile.html` instead of depending on FOMO's iPhone web experience. See [STANDALONE-PWA.md](STANDALONE-PWA.md).
+The free mobile beta now prioritizes PaperMade's own mobile market viewer + paper trader at `papermade.xyz/mobile.html` instead of depending on FOMO's iPhone web experience. See [STANDALONE-PWA.md](STANDALONE-PWA.md).
 
 The native iOS/Safari-extension work below remains the paid distribution path if the free beta proves demand.
 
-# PaperMade Mobile — iPhone First
+# Paper Made — iPhone First
 
 This branch starts the mobile version of PaperMade.
 
@@ -89,4 +89,4 @@ The mobile overlay should use a bottom-sheet interaction instead of shrinking th
 
 ## Security invariant
 
-PaperMade Mobile remains a simulator. It should not require a seed phrase, private key, custody, or permission to sign real blockchain transactions.
+Paper Made remains a simulator. It should not require a seed phrase, private key, custody, or permission to sign real blockchain transactions.
