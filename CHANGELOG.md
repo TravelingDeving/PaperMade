@@ -1,5 +1,18 @@
 # Changelog
 
+## Website v4.6.4
+- Publishes Overlay v0.10.6 through the official install flow.
+- Uses the descriptive download filename `PaperMade-v0.10.6-HIGH-MC-PNL-PRECISION.zip` instead of a generic FULL-DROP-IN release name.
+- Preserves Calendar, recovered leaderboard, Flex Studio image/video exports, and the working auth configuration.
+- No new SQL is required.
+
+## Overlay v0.10.6 — High-MC P&L Precision
+- Fixes active P&L becoming sticky or inaccurate on roughly $1M+ market-cap tokens.
+- Keeps the platform-visible MC for display/entry labels while using a higher-resolution live price/reference ratio for position valuation when the M-scale MC label is too coarse.
+- Cross-checks live price and normalized reference-MC ratios; materially divergent sources fall back to the normalized reference ratio.
+- Speeds the FOMO fallback market-data refresh from 5s to 2.5s.
+- Existing paper positions remain compatible; no state reset is required.
+
 ## Website v4.6.3
 - Restored `calendar.html` and the P&L Calendar experience.
 - Added P&L Calendar back to the Tools dropdown.
