@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "PaperMade Mobile",
+  "version": "0.1.0",
+  "description": "PaperMade mobile paper-trading overlay for supported Safari chart pages.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://api.dexscreener.com/*",
+    "https://fomo.family/*",
+    "https://production.fomo.family/*",
+    "https://axiom.trade/*",
+    "https://*.axiom.trade/*",
+    "https://pump.fun/*",
+    "https://*.pump.fun/*",
+    "https://gmgn.ai/*",
+    "https://*.gmgn.ai/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://fomo.family/*",
+        "https://production.fomo.family/*",
+        "https://axiom.trade/*",
+        "https://*.axiom.trade/*",
+        "https://pump.fun/*",
+        "https://*.pump.fun/*",
+        "https://gmgn.ai/*",
+        "https://*.gmgn.ai/*"
+      ],
+      "js": ["content.js"],
+      "css": ["mobile.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
