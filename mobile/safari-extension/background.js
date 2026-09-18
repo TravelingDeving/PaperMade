@@ -210,7 +210,7 @@ async function pushState(state) {
 async function publishNative(message) {
   try {
     if (!api.runtime?.sendNativeMessage) return null;
-    return await api.runtime.sendNativeMessage(message);
+    return await api.runtime.sendNativeMessage("xyz.papermade.app", message);
   } catch (_) {
     return null;
   }
