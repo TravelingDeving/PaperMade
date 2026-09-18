@@ -16,11 +16,27 @@ struct CalendarView: View {
         var result: [Date: Double] = [:]
         let cal = Calendar.current
 
-        for trade in store.trades {
-            guard trade.type == "SELL", let pnl = trade.realizedPnl else { continue }
-            let day = cal.startOfDay(for: trade.timestamp)
-            result[day, default: 0] += pnl
+        // Prefer the persistent daily ledger because it survives journal trimming.
+        for (key, row) in store.snapshot.calendarDays {
+            let parts = key.split(separator: "-").compactMap { Int($0) }
+            guard parts.count == 3 else { continue }
+            var components = DateComponents()
+            components.year = parts[0]
+            components.month = parts[1]
+            components.day = parts[2]
+            if let date = cal.date(from: components) {
+                result[cal.startOfDay(for: date)] = row.pnl
+            }
         }
+
+        // Fill any older/missing ledger days from the detailed closed-trade journal.
+        for trade in store.closedTrades {
+            let day = cal.startOfDay(for: trade.exitAt)
+            if result[day] == nil {
+                result[day, default: 0] += trade.realizedPnl
+            }
+        }
+
         return result
     }
 
@@ -87,20 +103,20 @@ struct CalendarView: View {
                 let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 7)
 
                 LazyVGrid(columns: columns, spacing: 6) {
-                    ForEach(["S","M","T","W","T","F","S"], id: \.self) { day in
+                    ForEach(["S","M","T","W","T","F","S"], id: .self) { day in
                         Text(day)
                             .font(.caption2.bold())
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                     }
 
-                    ForEach(Array(days.enumerated()), id: \.offset) { _, date in
+                    ForEach(Array(days.enumerated()), id: .offset) { _, date in
                         DayCell(date: date, pnl: date.flatMap { dayPnL[Calendar.current.startOfDay(for: $0)] })
                     }
                 }
                 .padding(.horizontal)
 
-                if store.trades.isEmpty {
+                if store.closedTrades.isEmpty && store.snapshot.calendarDays.isEmpty {
                     ContentUnavailableView(
                         "No Realized P&L Yet",
                         systemImage: "calendar",
@@ -112,6 +128,9 @@ struct CalendarView: View {
             .padding(.vertical)
         }
         .navigationTitle("P&L Calendar")
+        .task {
+            store.reloadSharedSnapshots()
+        }
     }
 }
 
