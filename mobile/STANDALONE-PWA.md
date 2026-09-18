@@ -1,4 +1,4 @@
-# PaperMade Standalone Mobile Trader
+# PaperMade Paper Made
 
 Website v4.8.0 changes the free iPhone beta direction.
 
@@ -6,7 +6,7 @@ Website v4.8.0 changes the free iPhone beta direction.
 
 FOMO's iPhone web experience routes mobile users to its app/download landing experience, so the no-cost Safari-overlay experiment is not a dependable product path.
 
-PaperMade Mobile therefore becomes its own market viewer + paper trader instead of depending on FOMO Web.
+Paper Made therefore becomes its own market viewer + paper trader instead of depending on FOMO Web.
 
 ## Free beta architecture
 
