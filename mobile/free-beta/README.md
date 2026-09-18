@@ -31,3 +31,12 @@ PaperMade remains simulation-only. The free mobile beta does not connect wallets
 ## Paid upgrade path
 
 If the free beta gets real usage, the existing `mobile-ios` native companion app + Safari Web Extension + shared App Group + Codemagic/TestFlight work becomes the production path.
+
+
+## FOMO Universal Link caveat
+
+On iPhone, tapping a normal `https://fomo.family/` link can hand off directly to the installed FOMO native app through Apple's Universal Links behavior.
+
+For the free beta, the setup page therefore does **not** use a normal clickable FOMO link. It tells the tester to copy `https://production.fomo.family/`, paste it directly into Safari's address bar, and navigate from there. The normal Safari Shortcut flow only begins after FOMO is actually staying in Safari.
+
+If FOMO later blocks or redirects all mobile web browsing at the site level, the free Shortcut route cannot provide the intended FOMO experience and the native/paid integration path must be reconsidered.
