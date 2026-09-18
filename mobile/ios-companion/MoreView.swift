@@ -22,7 +22,9 @@ struct MoreView: View {
             }
 
             Section("PaperMade") {
-                Link("P&L Calendar", destination: URL(string: "https://papermade.xyz/calendar.html")!)
+                NavigationLink("P&L Calendar") {
+                    CalendarView()
+                }
                 Link("Leaderboard", destination: URL(string: "https://papermade.xyz/leaderboard.html")!)
                 Link("Flex Studio", destination: URL(string: "https://papermade.xyz/flex.html")!)
                 Link("Profile", destination: URL(string: "https://papermade.xyz/profile.html")!)
