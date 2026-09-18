@@ -85,3 +85,29 @@ Proposed Apple identifiers:
 - App Group: group.xyz.papermade.shared
 
 The next physical-device milestone is generating the Xcode project on macOS, registering/signing these identifiers with the Apple Developer account, installing on an iPhone, and testing the Safari overlay on the supported host sites before TestFlight.
+
+
+## Cloud build pipeline
+
+The `mobile-ios` branch now includes a root-level `codemagic.yaml` for a macOS cloud build.
+
+Workflow:
+- installs XcodeGen
+- generates `PaperMadeMobile.xcodeproj`
+- verifies both app/extension targets
+- applies App Store provisioning profiles
+- builds a signed IPA
+- exposes IPA, app, dSYM and Xcode logs as artifacts
+- is prepared to upload to App Store Connect once the Codemagic Apple integration is connected
+
+The Codemagic Apple integration is expected to be named:
+
+`papermade`
+
+The first workflow intentionally keeps automatic TestFlight submission disabled until the first signed iPhone build and Safari-extension behavior are verified.
+
+## App Store compliance prep
+
+Both native bundles now include a `PrivacyInfo.xcprivacy` manifest for the shared App Group `UserDefaults` bridge. The declared reason is `1C8F.1`, which is the App Group sharing reason for UserDefaults.
+
+Safari native messaging now uses the containing app identifier parameter expected by Safari's `sendNativeMessage` API.
