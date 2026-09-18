@@ -10,7 +10,7 @@ struct MoreView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(store.accountLabel)
                             .fontWeight(.semibold)
-                        Text(store.isConnected ? "Paper state sync enabled" : "Sign in to sync desktop and mobile")
+                        Text(store.isConnected ? "Paper state sync enabled" : "Sign in through PaperMade in Safari to sync desktop and mobile")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -19,15 +19,25 @@ struct MoreView: View {
                         .fill(store.isConnected ? Color.green : Color.secondary)
                         .frame(width: 9, height: 9)
                 }
+
+                Button("Refresh Shared Data") {
+                    store.reloadSharedSnapshots()
+                }
             }
 
             Section("PaperMade") {
                 NavigationLink("P&L Calendar") {
                     CalendarView()
                 }
-                Link("Leaderboard", destination: URL(string: "https://papermade.xyz/leaderboard.html")!)
-                Link("Flex Studio", destination: URL(string: "https://papermade.xyz/flex.html")!)
-                Link("Profile", destination: URL(string: "https://papermade.xyz/profile.html")!)
+                NavigationLink("Leaderboard") {
+                    LeaderboardView()
+                }
+                NavigationLink("Flex Studio") {
+                    FlexShareView()
+                }
+                NavigationLink("Profile") {
+                    ProfileView()
+                }
             }
 
             Section("Safety") {
@@ -37,5 +47,8 @@ struct MoreView: View {
             }
         }
         .navigationTitle("More")
+        .task {
+            store.reloadSharedSnapshots()
+        }
     }
 }
