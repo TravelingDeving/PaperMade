@@ -317,6 +317,25 @@ async function fetchLeaderboardSnapshot(account, period = "all") {
   }));
 }
 
+async function syncNativeDirtyState() {
+  const pending = await publishNative({type:"PM_NATIVE_PULL_STATE"});
+  if (!pending?.ok || !pending?.dirty || !pending?.state) {
+    return {ok:true,dirty:false};
+  }
+
+  const result = await pushState(pending.state);
+  if (!result?.ok) return result;
+
+  await api.storage.local.set({[STATE_KEY]: pending.state});
+  await publishNative({type:"PM_NATIVE_MARK_SYNCED"});
+  await publishPaperState(pending.state, {
+    connected:true,
+    approved:true
+  });
+
+  return {ok:true,dirty:false,synced:true};
+}
+
 async function publishSocialSnapshot(period = "all") {
   const account = await getAccount();
   if (!accountConfigured(account)) {
@@ -366,7 +385,10 @@ api.runtime.onMessage.addListener((message, sender, sendResponse) => {
       refreshToken:p.refreshToken,
       user:p.user,
       connectedAt:Date.now()
-    }).then(()=>sendResponse?.({ok:true})).catch(()=>sendResponse?.({ok:false}));
+    }).then(async()=>{
+      await syncNativeDirtyState().catch(()=>{});
+      sendResponse?.({ok:true});
+    }).catch(()=>sendResponse?.({ok:false}));
     return true;
   }
 
@@ -393,6 +415,11 @@ api.runtime.onMessage.addListener((message, sender, sendResponse) => {
         syncStatus:status,
         updatedAt:Date.now()
       }).catch(()=>{});
+
+      if (status.connected) {
+        syncNativeDirtyState().catch(()=>{});
+      }
+
       sendResponse?.(status);
     });
     return true;
