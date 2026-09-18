@@ -111,3 +111,22 @@ The first workflow intentionally keeps automatic TestFlight submission disabled 
 Both native bundles now include a `PrivacyInfo.xcprivacy` manifest for the shared App Group `UserDefaults` bridge. The declared reason is `1C8F.1`, which is the App Group sharing reason for UserDefaults.
 
 Safari native messaging now uses the containing app identifier parameter expected by Safari's `sendNativeMessage` API.
+
+
+## FOMO-first embedded beta
+
+FOMO is now the first-priority embedded mobile host.
+
+The iOS companion app has an experimental **FOMO inside PaperMade** path:
+- WKWebView hosts FOMO web.
+- FOMO requests desktop content because the official FOMO web experience is desktop-first.
+- PaperMade's pill and trading sheet are native SwiftUI, not injected FOMO DOM.
+- token context comes from the page URL;
+- market data resolves independently;
+- PaperMade Buy/Sell remains fully simulated;
+- native paper trades write into the shared PaperMade App Group state;
+- a dirty-state queue is picked up by the Safari extension/account bridge and uploaded to the normal PaperMade state when account sync is available.
+
+The original Safari extension route remains available as the fallback.
+
+See `mobile/FOMO-INTEGRATION.md` for the physical-device test matrix and public-release guardrails.
