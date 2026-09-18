@@ -224,6 +224,7 @@ private struct EmbeddedTradingWebView: UIViewRepresentable {
 
                 let data = try EmbeddedPaperState.write(raw)
                 try store.replaceFromStateJSON(data)
+                store.reloadSharedSnapshots()
                 pushModelToOverlay()
                 setStatus(mode == "sell" ? "Paper sell filled." : "Paper buy filled.", kind: "ok")
             } catch {
@@ -233,12 +234,18 @@ private struct EmbeddedTradingWebView: UIViewRepresentable {
 
         private func pushModelToOverlay() {
             guard let webView else { return }
+            let raw = EmbeddedPaperState.currentDictionary()
+            let paperCash: Double = {
+                if let n = raw["cash"] as? NSNumber { return n.doubleValue }
+                if let s = raw["cash"] as? String, let d = Double(s) { return d }
+                return store.snapshot.cash
+            }()
+
             var payload: [String: Any] = [
-                "cash": store.snapshot.cash
+                "cash": paperCash
             ]
 
             if let token = currentToken {
-                let raw = EmbeddedPaperState.currentDictionary()
                 let metrics = EmbeddedPaperState.positionMetrics(state: raw, token: token)
 
                 payload["token"] = [
