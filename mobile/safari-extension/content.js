@@ -271,6 +271,19 @@
     }));
   }
 
+  function showNote(message, tone="neutral") {
+    const note=document.querySelector("#pm-note");
+    if(!note) return;
+    note.textContent=String(message || "");
+    note.classList.toggle("pm-note-error", tone==="error");
+    note.classList.toggle("pm-note-ok", tone==="ok");
+    clearTimeout(showNote._timer);
+    showNote._timer=setTimeout(()=>{
+      note.textContent="Mobile alpha • paper only";
+      note.classList.remove("pm-note-error","pm-note-ok");
+    },2600);
+  }
+
   function renderPages() {
     document.querySelectorAll("#pm-mobile-sheet .pm-page").forEach(el=>{
       el.classList.toggle("pm-page-active", el.dataset.page===page);
@@ -362,13 +375,22 @@
   }
 
   async function trade() {
-    if(!token||!address) return;
+    if(!token||!address) {
+      showNote("Open a supported token page first.","error");
+      return;
+    }
     const input=document.querySelector("#pm-input");
     const amount=Number(input.value||0);
-    if(!Number.isFinite(amount)||amount<=0) return;
+    if(!Number.isFinite(amount)||amount<=0) {
+      showNote("Enter a paper trade amount.","error");
+      return;
+    }
 
     if(mode==="buy") {
-      if(amount>state.cash) return;
+      if(amount>state.cash) {
+        showNote("Not enough available paper balance.","error");
+        return;
+      }
       const old=position()||{
         symbol:token.symbol,
         chainId:token.chainId||"",
@@ -407,7 +429,10 @@
       state.trades.push({type:"BUY",address,symbol:token.symbol,usd:amount,marketCap:Number(token.marketCap||0),at:Date.now()});
     } else {
       const pos=position();
-      if(!pos) return;
+      if(!pos) {
+        showNote("No open paper position to sell.","error");
+        return;
+      }
       const m=metrics();
       const requested=Math.min(amount,m.value);
       const fraction=m.value>0?Math.min(1,requested/m.value):0;
@@ -475,6 +500,7 @@
     input.value="";
     await save();
     render();
+    showNote(mode==="buy"?"Paper buy added.":"Paper sell recorded.","ok");
   }
 
   function render() {
@@ -535,35 +561,65 @@
 
   async function refreshMarket() {
     const next=findAddress();
-    if(next && next!==address) address=next;
-    if(!address){render();return;}
+    if(next && next!==address) {
+      address=next;
+      token=null;
+    }
 
-    api.runtime.sendMessage({type:"PM_MOBILE_FETCH_MARKET",address},response=>{
-      if(response?.ok){
-        token=response.token;
-        if(token?.address) address=token.address;
+    if(!address){
+      token=null;
+      render();
+      return;
+    }
 
-        const pos=position();
-        if(pos){
-          const mc=Number(token?.marketCap||0);
-          const m=metrics();
-          if(mc>0){
-            pos.highestMc=Math.max(Number(pos.highestMc||0),mc);
-            pos.lowestMc=Number(pos.lowestMc||0)>0?Math.min(Number(pos.lowestMc),mc):mc;
-          }
-          pos.maxPnlPercent=Math.max(Number(pos.maxPnlPercent||0),Number(m.pct||0));
-          pos.minPnlPercent=Math.min(Number(pos.minPnlPercent||0),Number(m.pct||0));
-          state.positions[address]=pos;
-        }
+    const response=await runtimeMessage({type:"PM_MOBILE_FETCH_MARKET",address});
+    if(!response?.ok) {
+      render();
+      return;
+    }
 
-        render();
+    token=response.token;
+    if(token?.address) address=token.address;
+
+    const pos=position();
+    if(pos){
+      const mc=Number(token?.marketCap||0);
+      const m=metrics();
+      if(mc>0){
+        pos.highestMc=Math.max(Number(pos.highestMc||0),mc);
+        pos.lowestMc=Number(pos.lowestMc||0)>0?Math.min(Number(pos.lowestMc),mc):mc;
       }
-    });
+      pos.maxPnlPercent=Math.max(Number(pos.maxPnlPercent||0),Number(m.pct||0));
+      pos.minPnlPercent=Math.min(Number(pos.minPnlPercent||0),Number(m.pct||0));
+      state.positions[address]=pos;
+    }
+
+    render();
+  }
+
+  function installNavigationWatcher() {
+    if(window.__PAPERMADE_MOBILE_NAV_WATCHER__) return;
+    window.__PAPERMADE_MOBILE_NAV_WATCHER__=true;
+
+    const signal=()=>setTimeout(()=>refreshMarket().catch(()=>{}),120);
+    window.addEventListener("popstate",signal);
+    window.addEventListener("hashchange",signal);
+
+    for(const name of ["pushState","replaceState"]){
+      const original=history[name];
+      if(typeof original!=="function") continue;
+      history[name]=function(...args){
+        const result=original.apply(this,args);
+        signal();
+        return result;
+      };
+    }
   }
 
   async function start() {
     await load();
     shell();
+    installNavigationWatcher();
     render();
     await refreshMarket();
     clearInterval(timer);
