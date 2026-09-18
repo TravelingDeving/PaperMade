@@ -1,64 +1,31 @@
 import SwiftUI
-import SafariServices
 
 struct ContentView: View {
+    @EnvironmentObject var store: PaperMadeStore
     @State private var selectedTab = 0
 
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                VStack(spacing: 22) {
-                    Spacer()
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 54, weight: .bold))
-                        .foregroundStyle(.green)
-
-                    Text("PaperMade")
-                        .font(.system(size: 34, weight: .black))
-
-                    Text("Real charts. Fake money. Better traders.")
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label("Open Safari", systemImage: "safari")
-                        Label("Enable PaperMade in Safari Extensions", systemImage: "puzzlepiece.extension")
-                        Label("Allow PaperMade on supported trading sites", systemImage: "checkmark.shield")
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
-
-                    Button("Open Safari Extension Settings") {
-                        if let url = URL(string: UIApplication.openSettingsURLString) {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
-
-                    Spacer()
-                }
-                .padding()
-                .navigationTitle("Mobile Setup")
+                TradeHomeView()
             }
             .tabItem { Label("Trade", systemImage: "chart.xyaxis.line") }
             .tag(0)
 
             NavigationStack {
-                PlaceholderView(title: "Positions", icon: "rectangle.stack")
+                PositionsView()
             }
             .tabItem { Label("Positions", systemImage: "rectangle.stack") }
             .tag(1)
 
             NavigationStack {
-                PlaceholderView(title: "Journal", icon: "book.closed")
+                JournalView()
             }
             .tabItem { Label("Journal", systemImage: "book.closed") }
             .tag(2)
 
             NavigationStack {
-                PlaceholderView(title: "More", icon: "ellipsis.circle")
+                MoreView()
             }
             .tabItem { Label("More", systemImage: "ellipsis.circle") }
             .tag(3)
@@ -67,22 +34,101 @@ struct ContentView: View {
     }
 }
 
-private struct PlaceholderView: View {
-    let title: String
-    let icon: String
+private struct TradeHomeView: View {
+    @EnvironmentObject var store: PaperMadeStore
 
     var body: some View {
-        VStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 44))
-                .foregroundStyle(.green)
-            Text(title)
-                .font(.title2.bold())
-            Text("PaperMade account sync will populate this screen in the next mobile milestone.")
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+        ScrollView {
+            VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("PaperMade Mobile")
+                        .font(.system(size: 30, weight: .black))
+
+                    Text("Real charts. Fake money. Better traders.")
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                HStack(spacing: 10) {
+                    StatCard(title: "AVAILABLE", value: store.snapshot.cash.formatted(.currency(code: "USD")))
+                    StatCard(title: "INVESTED", value: store.totalInvested.formatted(.currency(code: "USD")))
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Label("Trade from Safari", systemImage: "safari")
+                        .font(.headline)
+
+                    Text("Open FOMO, Axiom, Pump.fun or GMGN in Safari. PaperMade appears as a small pill at the bottom of the page. Tap it to open the mobile paper-trading sheet.")
+                        .foregroundStyle(.secondary)
+
+                    Button {
+                        if let url = URL(string: "https://papermade.xyz") {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "safari")
+                            Text("Open PaperMade in Safari")
+                                .fontWeight(.bold)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                }
+                .padding()
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
+
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Safari extension")
+                            .font(.headline)
+                        Spacer()
+                        Text(store.isConnected ? "SYNCED" : "SETUP")
+                            .font(.caption.bold())
+                            .foregroundStyle(store.isConnected ? .green : .orange)
+                    }
+
+                    Label("Enable PaperMade in Safari Extensions", systemImage: "puzzlepiece.extension")
+                    Label("Allow it on supported trading sites", systemImage: "checkmark.shield")
+                    Label("Sign into the same PaperMade account", systemImage: "person.crop.circle.badge.checkmark")
+                }
+                .font(.subheadline)
+                .padding()
+                .background(Color.green.opacity(0.08), in: RoundedRectangle(cornerRadius: 18))
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Mobile alpha")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                    Text("Paper trading only. PaperMade Mobile does not require a seed phrase, private key, wallet custody or blockchain signing.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding()
         }
-        .navigationTitle(title)
+        .navigationTitle("Trade")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct StatCard: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.caption2.bold())
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.title3.bold())
+                .minimumScaleFactor(0.75)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 16))
     }
 }
