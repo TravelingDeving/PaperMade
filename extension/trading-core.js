@@ -1,4 +1,4 @@
-// PaperMade v0.9.6 — public trading-math snapshot
+// PaperMade v0.10.6 — public trading-math snapshot
 //
 // This file documents the core simulated position math used by the private-beta
 // overlay. It contains no wallet signing, blockchain transaction construction,
@@ -43,33 +43,91 @@ export function mirroredFeeFor(notional, detectedFee = {}) {
   return 0;
 }
 
+function validTrackingRatio(value) {
+  value = Number(value || 0);
+  return Number.isFinite(value) && value > 0 && value < 1000;
+}
+
+function ratioDivergence(a, b) {
+  if (!validTrackingRatio(a) || !validTrackingRatio(b)) return Infinity;
+  return Math.max(a / b, b / a);
+}
+
 export function positionMetrics(pos, mark) {
   if (!pos || !pos.costBasis) {
-    return { value: 0, usd: 0, percent: 0, ratio: 1 };
+    return { value: 0, usd: 0, percent: 0, ratio: 1, trackingSource: "none" };
   }
 
   const currentPrice = Number(mark?.priceUsd || 0);
   const currentMc = Number(mark?.marketCap || 0);
+  const referenceMc = Number(mark?.referenceMarketCap || 0);
   const entryPrice = Number(pos.avgEntryPrice || 0);
-  const fomoEntryMc = Number(pos.avgEntryMc || 0);
-  const externalEntryMc = Number(pos.avgReferenceMc || 0);
+  const displayEntryMc = Number(pos.avgEntryMc || 0);
+  const referenceEntryMc = Number(pos.avgReferenceMc || 0);
   const markSource = String(mark?.markSource || "");
 
-  let ratio = 1;
+  const displayMcRatio =
+    currentMc > 0 && displayEntryMc > 0
+      ? currentMc / displayEntryMc
+      : 0;
 
-  // While the learner is viewing the token in FOMO, FOMO's visible market cap
-  // is the authoritative mark for the paper position.
-  if (markSource === "FOMO chart" && currentMc > 0 && fomoEntryMc > 0) {
-    ratio = currentMc / fomoEntryMc;
-  // Off-page tracking uses the fallback feed against the fallback baseline
-  // captured at entry. This prevents a source-scale mismatch from creating
-  // artificial P&L.
-  } else if (currentMc > 0 && externalEntryMc > 0) {
-    ratio = currentMc / externalEntryMc;
-  } else if (currentPrice > 0 && entryPrice > 0) {
-    ratio = currentPrice / entryPrice;
-  } else if (currentMc > 0 && fomoEntryMc > 0) {
-    ratio = currentMc / fomoEntryMc;
+  const priceRatio =
+    currentPrice > 0 && entryPrice > 0
+      ? currentPrice / entryPrice
+      : 0;
+
+  const referenceRatio =
+    referenceMc > 0 && referenceEntryMc > 0
+      ? referenceMc / referenceEntryMc
+      : 0;
+
+  const isHostChart = / chart$/i.test(markSource);
+
+  // Seven-figure host MC labels are often compacted to one decimal place.
+  // Example: materially different underlying values may both render as 1.3M.
+  // Above $1M, preserve that visible MC for the UI while valuing the paper
+  // position with a higher-resolution percentage ratio.
+  const highMcDisplay =
+    isHostChart &&
+    Math.max(displayEntryMc, currentMc) >= 1_000_000;
+
+  let ratio = 1;
+  let trackingSource = "entry";
+
+  if (highMcDisplay) {
+    if (validTrackingRatio(priceRatio) && validTrackingRatio(referenceRatio)) {
+      if (ratioDivergence(priceRatio, referenceRatio) <= 1.12) {
+        ratio = priceRatio;
+        trackingSource = "live price";
+      } else {
+        ratio = referenceRatio;
+        trackingSource = "reference MC";
+      }
+    } else if (validTrackingRatio(priceRatio)) {
+      ratio = priceRatio;
+      trackingSource = "live price";
+    } else if (validTrackingRatio(referenceRatio)) {
+      ratio = referenceRatio;
+      trackingSource = "reference MC";
+    } else if (validTrackingRatio(displayMcRatio)) {
+      ratio = displayMcRatio;
+      trackingSource = "platform MC";
+    }
+  } else if (isHostChart && validTrackingRatio(displayMcRatio)) {
+    ratio = displayMcRatio;
+    trackingSource = "platform MC";
+  } else if (validTrackingRatio(referenceRatio)) {
+    ratio = referenceRatio;
+    trackingSource = "reference MC";
+  } else if (currentMc > 0 && referenceEntryMc > 0 && validTrackingRatio(currentMc / referenceEntryMc)) {
+    ratio = currentMc / referenceEntryMc;
+    trackingSource = "fallback MC";
+  } else if (validTrackingRatio(priceRatio)) {
+    ratio = priceRatio;
+    trackingSource = "live price";
+  } else if (validTrackingRatio(displayMcRatio)) {
+    ratio = displayMcRatio;
+    trackingSource = "display MC";
   }
 
   if (!Number.isFinite(ratio) || ratio <= 0) ratio = 1;
@@ -79,7 +137,7 @@ export function positionMetrics(pos, mark) {
   const usd = value - Number(pos.costBasis || 0);
   const percent = pos.costBasis ? (usd / pos.costBasis) * 100 : 0;
 
-  return { value, usd, percent, ratio };
+  return { value, usd, percent, ratio, trackingSource };
 }
 
 export function applyPaperBuy(existing, {
