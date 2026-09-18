@@ -39,3 +39,23 @@ On macOS with Xcode installed:
 - Add Calendar and Leaderboard.
 - Add Flex Studio/share export.
 - Add mobile host-specific chart-marker adapters.
+
+
+## Progress — mobile app shell
+
+The companion app now has native:
+- Trade home / Safari setup
+- Positions
+- Journal
+- P&L Calendar
+- More / account status
+
+The Safari overlay now has:
+- Trade
+- Positions
+- Journal
+- More
+- account sync status
+- links into Calendar, Leaderboard, Flex Studio and Profile
+
+The next app milestone is native leaderboard/profile data plus Flex Studio sharing, followed by Xcode packaging and TestFlight.
