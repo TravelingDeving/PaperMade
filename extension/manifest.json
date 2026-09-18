@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PaperMade — Paper Trading Overlay",
-  "version": "0.10.5",
-  "description": "PaperMade v0.10.5 enlarges the available balance, keeps the clean Trade UI, and makes chart B/S markers candle-aware so they re-anchor during host-chart zoom/pan.",
+  "version": "0.10.6",
+  "description": "PaperMade v0.10.6 fixes seven-figure market-cap P&L tracking by using high-resolution live price/reference ratios when platform MC labels are rounded.",
   "permissions": [
     "storage",
     "alarms"
