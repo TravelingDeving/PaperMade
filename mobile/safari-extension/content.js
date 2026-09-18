@@ -12,6 +12,7 @@
   let mode = "buy";
   let timer = null;
   let syncStatus = {connected:false,signedIn:false,approved:false,discordUsername:""};
+  let page = "trade";
 
   const money = n => "$" + Number(n || 0).toFixed(2);
   const compact = n => {
@@ -118,21 +119,53 @@
         </div>
         <div class="pm-head-right"><strong id="pm-balance" class="pm-balance">$100.00 available</strong><span class="pm-live">LIVE</span></div>
       </div>
-      <div class="pm-stats">
-        <div class="pm-stat"><span>PRICE</span><strong id="pm-price">—</strong></div>
-        <div class="pm-stat"><span>MARKET CAP</span><strong id="pm-mc">—</strong></div>
-        <div class="pm-stat"><span>LIQUIDITY</span><strong id="pm-liq">—</strong></div>
-        <div class="pm-stat"><span>INVESTED</span><strong id="pm-invested">$0.00</strong></div>
-        <div class="pm-stat"><span>POSITION VALUE</span><strong id="pm-value">$0.00</strong></div>
-        <div class="pm-stat"><span>AVG BUY MC</span><strong id="pm-avg">—</strong></div>
+      <div class="pm-page pm-page-active" data-page="trade">
+        <div class="pm-stats">
+          <div class="pm-stat"><span>PRICE</span><strong id="pm-price">—</strong></div>
+          <div class="pm-stat"><span>MARKET CAP</span><strong id="pm-mc">—</strong></div>
+          <div class="pm-stat"><span>LIQUIDITY</span><strong id="pm-liq">—</strong></div>
+          <div class="pm-stat"><span>INVESTED</span><strong id="pm-invested">$0.00</strong></div>
+          <div class="pm-stat"><span>POSITION VALUE</span><strong id="pm-value">$0.00</strong></div>
+          <div class="pm-stat"><span>AVG BUY MC</span><strong id="pm-avg">—</strong></div>
+        </div>
+        <div class="pm-pnl"><span>OPEN P&L</span><strong id="pm-pnl">$0.00 (0.00%)</strong><b id="pm-pnl-short">$0.00</b></div>
+        <div class="pm-tabs"><button class="pm-tab pm-active" data-mode="buy">Buy</button><button class="pm-tab" data-mode="sell">Sell</button></div>
+        <div class="pm-amount"><span>$</span><input id="pm-input" inputmode="decimal" placeholder="0"><small>Amount</small></div>
+        <div class="pm-quick" id="pm-quick"></div>
+        <div class="pm-row"><span>Paper only • no wallet signing</span><button class="pm-max" id="pm-max">Max</button></div>
+        <button id="pm-trade" class="pm-trade">Paper Buy</button>
       </div>
-      <div class="pm-pnl"><span>OPEN P&L</span><strong id="pm-pnl">$0.00 (0.00%)</strong><b id="pm-pnl-short">$0.00</b></div>
-      <div class="pm-tabs"><button class="pm-tab pm-active" data-mode="buy">Buy</button><button class="pm-tab" data-mode="sell">Sell</button></div>
-      <div class="pm-amount"><span>$</span><input id="pm-input" inputmode="decimal" placeholder="0"><small>Amount</small></div>
-      <div class="pm-quick" id="pm-quick"></div>
-      <div class="pm-row"><span>Paper only • no wallet signing</span><button class="pm-max" id="pm-max">Max</button></div>
-      <button id="pm-trade" class="pm-trade">Paper Buy</button>
-      <button id="pm-account" class="pm-account">Connect PaperMade account</button>
+
+      <div class="pm-page" data-page="positions">
+        <div class="pm-section-head"><strong>Open positions</strong><span id="pm-pos-count">0</span></div>
+        <div id="pm-positions-list" class="pm-list"></div>
+      </div>
+
+      <div class="pm-page" data-page="journal">
+        <div class="pm-section-head"><strong>Trade journal</strong><span id="pm-trade-count">0 trades</span></div>
+        <div id="pm-journal-list" class="pm-list"></div>
+      </div>
+
+      <div class="pm-page" data-page="more">
+        <div class="pm-more-card">
+          <span>ACCOUNT</span>
+          <strong id="pm-more-account">Not connected</strong>
+          <button id="pm-account" class="pm-account">Connect PaperMade account</button>
+        </div>
+        <div class="pm-more-links">
+          <button data-url="https://papermade.xyz/calendar.html">P&L Calendar</button>
+          <button data-url="https://papermade.xyz/leaderboard.html">Leaderboard</button>
+          <button data-url="https://papermade.xyz/flex.html">Flex Studio</button>
+          <button data-url="https://papermade.xyz/profile.html">Profile</button>
+        </div>
+      </div>
+
+      <nav class="pm-mobile-nav">
+        <button class="pm-nav-active" data-page-target="trade">Trade</button>
+        <button data-page-target="positions">Positions</button>
+        <button data-page-target="journal">Journal</button>
+        <button data-page-target="more">More</button>
+      </nav>
       <div id="pm-note" class="pm-note">Mobile alpha • paper only</div>
     `;
 
@@ -150,6 +183,92 @@
       if (syncStatus.connected) return;
       await runtimeMessage({type:"OPEN_PAPERMADE_LOGIN"});
     });
+
+    sheet.querySelectorAll("[data-page-target]").forEach(btn=>btn.addEventListener("click",()=>{
+      page=btn.dataset.pageTarget;
+      renderPages();
+    }));
+
+    sheet.querySelectorAll("[data-url]").forEach(btn=>btn.addEventListener("click",()=>{
+      const url=btn.dataset.url;
+      if (url) window.open(url,"_blank","noopener");
+    }));
+  }
+
+  function renderPages() {
+    document.querySelectorAll("#pm-mobile-sheet .pm-page").forEach(el=>{
+      el.classList.toggle("pm-page-active", el.dataset.page===page);
+    });
+    document.querySelectorAll("#pm-mobile-sheet [data-page-target]").forEach(btn=>{
+      btn.classList.toggle("pm-nav-active", btn.dataset.pageTarget===page);
+    });
+  }
+
+  function renderPositions() {
+    const list=document.querySelector("#pm-positions-list");
+    const count=document.querySelector("#pm-pos-count");
+    if(!list||!count) return;
+
+    const entries=Object.entries(state.positions||{}).filter(([,pos])=>Number(pos?.costBasis||0)>0);
+    count.textContent=String(entries.length);
+
+    if(!entries.length){
+      list.innerHTML='<div class="pm-empty">No open paper positions yet.</div>';
+      return;
+    }
+
+    list.innerHTML=entries.map(([addr,pos])=>{
+      const isCurrent=addr===address;
+      const m=isCurrent?metrics():null;
+      const value=isCurrent?m.value:Number(pos.costBasis||0);
+      const pnl=isCurrent?m.pnl:0;
+      const pct=isCurrent?m.pct:0;
+      const sign=pnl>=0?"+":"";
+      return `
+        <button class="pm-pos-card" data-pos-address="${addr}">
+          <div class="pm-pos-top"><strong>${pos.symbol||"TOKEN"}</strong><span>${money(value)}</span></div>
+          <div class="pm-pos-sub"><span>Invested ${money(pos.costBasis||0)}</span><span>Avg ${Number(pos.avgEntryMc||0)>0?compact(pos.avgEntryMc):"—"}</span></div>
+          <div class="pm-pos-sub"><span>${addr.slice(0,6)}…${addr.slice(-4)}</span><b class="${pnl>=0?"pm-green":"pm-red"}">${isCurrent?sign+pct.toFixed(2)+"%":"open"}</b></div>
+        </button>`;
+    }).join("");
+
+    list.querySelectorAll("[data-pos-address]").forEach(btn=>btn.addEventListener("click",()=>{
+      const target=btn.dataset.posAddress;
+      if(!target) return;
+      const pos=state.positions[target];
+      const route=target.startsWith("0x")?target:target;
+      page="trade";
+      renderPages();
+      document.querySelector("#pm-note").textContent=`Open ${pos?.symbol||"TOKEN"} on the host site to trade this position.`;
+      if(target===address) return;
+      navigator.clipboard?.writeText(route).catch(()=>{});
+    }));
+  }
+
+  function renderJournal() {
+    const list=document.querySelector("#pm-journal-list");
+    const count=document.querySelector("#pm-trade-count");
+    if(!list||!count) return;
+
+    const trades=Array.isArray(state.trades)?state.trades.slice().sort((a,b)=>Number(b.at||0)-Number(a.at||0)): [];
+    count.textContent=`${trades.length} trade${trades.length===1?"":"s"}`;
+
+    if(!trades.length){
+      list.innerHTML='<div class="pm-empty">Your paper trades will appear here.</div>';
+      return;
+    }
+
+    list.innerHTML=trades.slice(0,40).map(t=>{
+      const sell=String(t.type||"").toUpperCase()==="SELL";
+      const d=new Date(Number(t.at||Date.now()));
+      const realized=Number(t.realizedPnl||0);
+      return `
+        <div class="pm-journal-card">
+          <div class="pm-pos-top"><strong class="${sell?"pm-red":"pm-green"}">${sell?"SELL":"BUY"} ${t.symbol||"TOKEN"}</strong><span>${money(t.usd||0)}</span></div>
+          <div class="pm-pos-sub"><span>${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}</span><span>MC ${Number(t.marketCap||0)>0?compact(t.marketCap):"—"}</span></div>
+          ${sell&&Number.isFinite(realized)?`<div class="pm-pos-sub"><span>Realized P&L</span><b class="${realized>=0?"pm-green":"pm-red"}">${realized>=0?"+":""}${money(realized)}</b></div>`:""}
+        </div>`;
+    }).join("");
   }
 
   function quickButtons() {
@@ -242,17 +361,25 @@
     document.querySelector("#pm-pill-token").textContent="$"+symbol;
     document.querySelector("#pm-pill-pnl").textContent=pos?`${m.pct>=0?"+":""}${m.pct.toFixed(2)}%`:"PAPER";
 
+    renderPositions();
+    renderJournal();
+    renderPages();
+
     const account=document.querySelector("#pm-account");
+    const moreAccount=document.querySelector("#pm-more-account");
     if (account) {
       if (syncStatus.connected) {
         account.textContent=`Synced • ${syncStatus.discordUsername||"PaperMade"}`;
         account.classList.add("pm-synced");
+        if(moreAccount) moreAccount.textContent=`Synced as ${syncStatus.discordUsername||"PaperMade"}`;
       } else if (syncStatus.signedIn && !syncStatus.approved) {
         account.textContent="PaperMadeTester access required";
         account.classList.remove("pm-synced");
+        if(moreAccount) moreAccount.textContent="PaperMadeTester access required";
       } else {
         account.textContent="Connect PaperMade account";
         account.classList.remove("pm-synced");
+        if(moreAccount) moreAccount.textContent="Not connected";
       }
     }
 
