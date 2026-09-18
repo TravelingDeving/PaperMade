@@ -3,7 +3,10 @@
   "name": "PaperMade Mobile",
   "version": "0.2.0",
   "description": "PaperMade mobile paper-trading overlay for supported Safari chart pages.",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage",
+    "nativeMessaging"
+  ],
   "host_permissions": [
     "https://*.supabase.co/*",
     "https://api.dexscreener.com/*",
@@ -33,20 +36,32 @@
         "https://gmgn.ai/*",
         "https://*.gmgn.ai/*"
       ],
-      "js": ["content.js"],
-      "css": ["mobile.css"],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "mobile.css"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://papermade.xyz/*"],
-      "js": ["papermade-bridge.js"],
+      "matches": [
+        "https://papermade.xyz/*"
+      ],
+      "js": [
+        "papermade-bridge.js"
+      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["bridge-page.js"],
-      "matches": ["https://papermade.xyz/*"]
+      "resources": [
+        "bridge-page.js"
+      ],
+      "matches": [
+        "https://papermade.xyz/*"
+      ]
     }
   ]
 }
