@@ -36,8 +36,12 @@ enum SharedPaperMadeBridge {
         defaults?.synchronize()
     }
 
+    static func hasDirtyPaperState() -> Bool {
+        defaults?.bool(forKey: "nativePaperStateDirty") == true
+    }
+
     static func dirtyPaperStateData() -> Data? {
-        guard defaults?.bool(forKey: "nativePaperStateDirty") == true else { return nil }
+        guard hasDirtyPaperState() else { return nil }
         return paperStateData()
     }
 
