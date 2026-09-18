@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>PaperMade Mobile Prototype</title>
+  <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+  <main class="host">
+    <div class="fake-chart">
+      <div class="chart-label">HOST CHART</div>
+      <div class="price">$0.04172</div>
+    </div>
+  </main>
+
+  <button id="pill" class="pill" aria-label="Open PaperMade">
+    <span class="logo">P</span>
+    <span class="pill-token">$SWOGE</span>
+    <strong class="positive">+13.15%</strong>
+  </button>
+
+  <section id="sheet" class="sheet" aria-hidden="true">
+    <div class="grabber"></div>
+
+    <header class="token-head">
+      <div>
+        <div class="token-line"><span class="token-icon">S</span><strong>$SWOGE</strong><span class="muted">solana</span></div>
+        <div class="address">6hDQ...3AneT9</div>
+      </div>
+      <div class="head-right">
+        <strong class="balance">$256.31 available</strong>
+        <span class="live">LIVE</span>
+      </div>
+    </header>
+
+    <div class="stats">
+      <div><span>PRICE</span><strong>$0.04</strong></div>
+      <div><span>MARKET CAP</span><strong>$47.4K</strong></div>
+      <div><span>LIQUIDITY</span><strong>$17.4K</strong></div>
+      <div><span>INVESTED</span><strong>$10</strong></div>
+      <div><span>POSITION VALUE</span><strong>$11.31</strong></div>
+      <div><span>AVG BUY MC</span><strong>$41.9K</strong></div>
+    </div>
+
+    <div class="pnl">
+      <span>OPEN P&L</span>
+      <strong class="positive">$1.31 (+13.15%)</strong>
+      <b class="positive">+$1.31</b>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-mode="buy">Buy</button>
+      <button class="tab" data-mode="sell">Sell</button>
+    </div>
+
+    <div class="amount">
+      <span>$</span>
+      <input id="amountInput" inputmode="decimal" placeholder="0">
+      <small>Enter amount</small>
+    </div>
+
+    <div class="quick">
+      <button data-amt="3">$3</button>
+      <button data-amt="5">$5</button>
+      <button data-amt="10">$10</button>
+      <button data-amt="15">$15</button>
+    </div>
+
+    <div class="action-row">
+      <span class="muted">Paper only</span>
+      <button id="maxBtn" class="max">Max</button>
+    </div>
+
+    <button id="tradeBtn" class="trade-btn">Paper Buy $SWOGE</button>
+
+    <nav class="mobile-nav">
+      <button class="selected">Trade</button>
+      <button>Positions</button>
+      <button>Journal</button>
+      <button>More</button>
+    </nav>
+  </section>
+
+  <script src="mobile.js"></script>
+</body>
+</html>
