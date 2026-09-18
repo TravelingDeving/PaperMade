@@ -64,11 +64,54 @@ private struct TradeHomeView: View {
                     StatCard(title: "INVESTED", value: store.totalInvested.formatted(.currency(code: "USD")))
                 }
 
+                NavigationLink {
+                    EmbeddedTradingView(site: .fomo)
+                } label: {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Label("FOMO inside PaperMade", systemImage: "bolt.fill")
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Text("ALPHA")
+                                .font(.caption2.bold())
+                                .foregroundStyle(.green)
+                        }
+
+                        Text("Open FOMO directly inside PaperMade. The live FOMO page stays underneath while the PaperMade paper-trading pill and bottom sheet sit on top.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+
+                        HStack {
+                            Text("Open FOMO")
+                                .fontWeight(.bold)
+                            Spacer()
+                            Image(systemName: "arrow.right")
+                        }
+                        .foregroundStyle(.green)
+                    }
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [Color.green.opacity(0.17), Color.white.opacity(0.035)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        in: RoundedRectangle(cornerRadius: 18)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(Color.green.opacity(0.32), lineWidth: 1)
+                    }
+                }
+                .buttonStyle(.plain)
+
                 VStack(alignment: .leading, spacing: 12) {
                     Label("Trade from Safari", systemImage: "safari")
                         .font(.headline)
 
-                    Text("Open FOMO, Axiom, Pump.fun or GMGN in Safari. PaperMade appears as a small pill at the bottom of the page. Tap it to open the mobile paper-trading sheet.")
+                    Text("Safari remains the fallback path for every supported platform. FOMO also has an experimental in-app mode above so we can test which experience works best on a real iPhone.")
                         .foregroundStyle(.secondary)
 
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
