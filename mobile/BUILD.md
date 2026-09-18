@@ -59,3 +59,29 @@ The Safari overlay now has:
 - links into Calendar, Leaderboard, Flex Studio and Profile
 
 The next app milestone is native leaderboard/profile data plus Flex Studio sharing, followed by Xcode packaging and TestFlight.
+
+
+## Progress — native app bridge + social + sharing
+
+PaperMade Mobile now also includes:
+
+- Safari native-messaging permission
+- SafariWebExtensionHandler bridge
+- shared App Group snapshot storage
+- native iOS Leaderboard screen
+- native iOS Profile / achievements screen
+- native image P&L Flex cards + iOS share sheet
+- existing video Flex Studio link while MP4 rendering is ported
+- persistent closed-trade journal parsing
+- persistent calendar-day ledger parsing
+- native app refresh when returning to the foreground
+- XcodeGen project definition
+- app + extension entitlements
+- Safari extension Info.plist
+
+Proposed Apple identifiers:
+- app: xyz.papermade.app
+- extension: xyz.papermade.app.Extension
+- App Group: group.xyz.papermade.shared
+
+The next physical-device milestone is generating the Xcode project on macOS, registering/signing these identifiers with the Apple Developer account, installing on an iPhone, and testing the Safari overlay on the supported host sites before TestFlight.
