@@ -143,14 +143,18 @@ private struct TradeHomeView: View {
                         Text("Safari extension")
                             .font(.headline)
                         Spacer()
-                        Text(store.isConnected ? "SYNCED" : "SETUP")
+                        Text(store.nativeSyncPending ? "PENDING" : (store.isConnected ? "SYNCED" : "SETUP"))
                             .font(.caption.bold())
-                            .foregroundStyle(store.isConnected ? .green : .orange)
+                            .foregroundStyle(store.nativeSyncPending ? .orange : (store.isConnected ? .green : .orange))
                     }
 
                     Label("Enable PaperMade in Safari Extensions", systemImage: "puzzlepiece.extension")
                     Label("Allow it on supported trading sites", systemImage: "checkmark.shield")
                     Label("Sign into the same PaperMade account", systemImage: "person.crop.circle.badge.checkmark")
+                    if store.nativeSyncPending {
+                        Label("Embedded paper trades queue until account sync runs", systemImage: "arrow.triangle.2.circlepath")
+                            .foregroundStyle(.orange)
+                    }
                 }
                 .font(.subheadline)
                 .padding()
