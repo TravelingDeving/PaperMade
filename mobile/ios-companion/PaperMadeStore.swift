@@ -10,6 +10,7 @@ final class PaperMadeStore: ObservableObject {
     @Published var leaderboard: [LeaderboardRow] = []
     @Published var profile: PaperMadeProfile = .empty
     @Published var socialUpdatedAt: Date?
+    @Published var nativeSyncPending = false
 
     init() {
         reloadSharedSnapshots()
@@ -53,6 +54,7 @@ final class PaperMadeStore: ObservableObject {
         }
 
         socialUpdatedAt = SharedPaperMadeBridge.socialUpdatedAt()
+        nativeSyncPending = SharedPaperMadeBridge.hasDirtyPaperState()
     }
 
     func replaceFromStateJSON(_ json: Data) throws {
