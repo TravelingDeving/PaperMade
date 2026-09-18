@@ -1,0 +1,59 @@
+name: PaperMadeMobile
+
+options:
+  bundleIdPrefix: xyz.papermade
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: 5.10
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.1.0
+
+targets:
+  PaperMade:
+    type: application
+    platform: iOS
+    sources:
+      - path: ../ios-companion
+    entitlements:
+      path: ../ios-companion/PaperMade.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: xyz.papermade.app
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: PaperMade
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        CODE_SIGN_ENTITLEMENTS: ../ios-companion/PaperMade.entitlements
+    dependencies:
+      - target: PaperMadeExtension
+
+  PaperMadeExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ../ios-extension
+    resources:
+      - path: ../safari-extension
+    info:
+      path: ../ios-extension/Info.plist
+    entitlements:
+      path: ../ios-extension/PaperMadeExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: xyz.papermade.app.Extension
+        CODE_SIGN_ENTITLEMENTS: ../ios-extension/PaperMadeExtension.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+schemes:
+  PaperMade:
+    build:
+      targets:
+        PaperMade: all
+        PaperMadeExtension: all
+    run:
+      config: Debug
+    archive:
+      config: Release
