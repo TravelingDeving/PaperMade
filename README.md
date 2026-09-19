@@ -17,7 +17,6 @@ PaperMade is a browser-extension paper-trading overlay for practicing meme-coin 
 - DexScreener reference/fallback data
 - Jupiter Tokens/Price fallback for Solana mints without a normal indexed DEX pair yet
 - Live host-chart / market-cap tracking
-- On-chart paper Buy/Sell markers that re-anchor during supported host-chart zoom/pan
 - Solana and EVM contract-address detection
 - Custom dollar buys and sells
 - Editable quick-buy and sell presets
@@ -62,14 +61,14 @@ See [SECURITY.md](SECURITY.md), [PRIVACY.md](PRIVACY.md), and [docs/DATA-INTEGRI
 
 ## Current build
 
-- Overlay: **v0.10.7**
-- Website: **v4.8.3**
+- Overlay: **v0.10.8**
+- Website: **v4.8.4**
 - Primary site: **https://papermade.xyz**
 - Status: **Private Beta**
 
-Website v4.8.3 keeps the live mobile beta and distributes Overlay v0.10.7 through the official install flow.
+Website v4.8.4 keeps the live mobile beta and distributes Overlay v0.10.8 through the official install flow.
 
-Overlay v0.10.7 adds **Live P&L + Markers Fix**. Active-page P&L now prefers higher-resolution live price/reference movement across market caps instead of depending on a rounded or stale host MC label. It also restores reliable on-chart B/S marker fallback behavior and corrects the unpacked-extension ZIP layout.
+Overlay v0.10.8 keeps the **Live P&L** tracking fix across market caps and intentionally removes PaperMade on-chart B/S markers and chart overlays. Trade levels, Journal, Calendar, Avg Buy/Sell MC and P&L remain inside the overlay. The unpacked-extension ZIP layout remains corrected.
 
 PaperMade remains paper-only: the overlay does not need a wallet connection, seed phrase, private key, custody, or blockchain transaction signing.
 
