@@ -62,14 +62,14 @@ See [SECURITY.md](SECURITY.md), [PRIVACY.md](PRIVACY.md), and [docs/DATA-INTEGRI
 
 ## Current build
 
-- Overlay: **v0.10.6**
-- Website: **v4.6.4**
+- Overlay: **v0.10.7**
+- Website: **v4.8.3**
 - Primary site: **https://papermade.xyz**
 - Status: **Private Beta**
 
-Website v4.6.4 distributes Overlay v0.10.6 with a descriptive release filename (`PaperMade-v0.10.6-HIGH-MC-PNL-PRECISION.zip`) while preserving the Calendar, recovered leaderboard, Flex Studio video/PNG workflow, and working authentication configuration.
+Website v4.8.3 keeps the live mobile beta and distributes Overlay v0.10.7 through the official install flow.
 
-Overlay v0.10.6 adds **High-MC P&L Precision**. When a seven-figure platform market-cap label is rounded (for example, multiple real values showing as `1.3M`), PaperMade keeps the visible platform MC for the UI but values the paper position from a higher-resolution live price/reference ratio. FOMO fallback market-data refresh is also faster.
+Overlay v0.10.7 adds **Live P&L + Markers Fix**. Active-page P&L now prefers higher-resolution live price/reference movement across market caps instead of depending on a rounded or stale host MC label. It also restores reliable on-chart B/S marker fallback behavior and corrects the unpacked-extension ZIP layout.
 
 PaperMade remains paper-only: the overlay does not need a wallet connection, seed phrase, private key, custody, or blockchain transaction signing.
 
