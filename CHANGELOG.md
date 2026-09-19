@@ -1,5 +1,17 @@
 # Changelog
 
+## Website v4.8.4
+- Keeps the live mobile beta and existing website features.
+- Publishes Overlay v0.10.8 through the official install flow.
+- Keeps the corrected root-level extension ZIP layout.
+- No new SQL is required.
+
+## Overlay v0.10.8 — Live P&L, No Chart Markers
+- Keeps the v0.10.7 active P&L tracking fix across market caps.
+- Intentionally removes all PaperMade on-chart B/S markers and chart-level overlays by product request.
+- Keeps Avg Buy/Sell MC, break-even, initials-out, Journal, Calendar, open positions and P&L inside the PaperMade overlay.
+- Keeps manifest.json at the extracted package root for Chrome Load unpacked.
+
 ## Website v4.8.3
 - Keeps the v4.8.2 live mobile beta.
 - Publishes Overlay v0.10.7 through the official install flow.
