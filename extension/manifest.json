@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PaperMade — Paper Trading Overlay",
-  "version": "0.10.7",
-  "description": "PaperMade v0.10.7 fixes live active P&L tracking across market caps, restores reliable on-chart B/S markers, and corrects the unpacked-extension package layout.",
+  "version": "0.10.8",
+  "description": "PaperMade v0.10.8 keeps live P&L tracking across market caps and removes on-chart PaperMade B/S markers and chart overlays by product request.",
   "permissions": [
     "storage",
     "alarms"
