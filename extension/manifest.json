@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PaperMade — Paper Trading Overlay",
-  "version": "0.10.6",
-  "description": "PaperMade v0.10.6 fixes seven-figure market-cap P&L tracking by using high-resolution live price/reference ratios when platform MC labels are rounded.",
+  "version": "0.10.7",
+  "description": "PaperMade v0.10.7 fixes live active P&L tracking across market caps, restores reliable on-chart B/S markers, and corrects the unpacked-extension package layout.",
   "permissions": [
     "storage",
     "alarms"
