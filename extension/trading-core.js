@@ -1,4 +1,4 @@
-// PaperMade v0.10.6 — public trading-math snapshot
+// PaperMade v0.10.7 — public trading-math snapshot
 //
 // This file documents the core simulated position math used by the private-beta
 // overlay. It contains no wallet signing, blockchain transaction construction,
@@ -83,22 +83,27 @@ export function positionMetrics(pos, mark) {
 
   const isHostChart = / chart$/i.test(markSource);
 
-  // Seven-figure host MC labels are often compacted to one decimal place.
-  // Example: materially different underlying values may both render as 1.3M.
-  // Above $1M, preserve that visible MC for the UI while valuing the paper
-  // position with a higher-resolution percentage ratio.
-  const highMcDisplay =
-    isHostChart &&
-    Math.max(displayEntryMc, currentMc) >= 1_000_000;
-
   let ratio = 1;
   let trackingSource = "entry";
 
-  if (highMcDisplay) {
+  if (isHostChart) {
     if (validTrackingRatio(priceRatio) && validTrackingRatio(referenceRatio)) {
-      if (ratioDivergence(priceRatio, referenceRatio) <= 1.12) {
+      if (ratioDivergence(priceRatio, referenceRatio) <= 1.15) {
         ratio = priceRatio;
         trackingSource = "live price";
+      } else if (validTrackingRatio(displayMcRatio)) {
+        const priceVsMc = ratioDivergence(priceRatio, displayMcRatio);
+        const refVsMc = ratioDivergence(referenceRatio, displayMcRatio);
+        if (priceVsMc <= 1.15 && priceVsMc <= refVsMc) {
+          ratio = priceRatio;
+          trackingSource = "live price";
+        } else if (refVsMc <= 1.15) {
+          ratio = referenceRatio;
+          trackingSource = "reference MC";
+        } else {
+          ratio = referenceRatio;
+          trackingSource = "reference MC";
+        }
       } else {
         ratio = referenceRatio;
         trackingSource = "reference MC";
@@ -113,13 +118,14 @@ export function positionMetrics(pos, mark) {
       ratio = displayMcRatio;
       trackingSource = "platform MC";
     }
-  } else if (isHostChart && validTrackingRatio(displayMcRatio)) {
-    ratio = displayMcRatio;
-    trackingSource = "platform MC";
   } else if (validTrackingRatio(referenceRatio)) {
     ratio = referenceRatio;
     trackingSource = "reference MC";
-  } else if (currentMc > 0 && referenceEntryMc > 0 && validTrackingRatio(currentMc / referenceEntryMc)) {
+  } else if (
+    currentMc > 0 &&
+    referenceEntryMc > 0 &&
+    validTrackingRatio(currentMc / referenceEntryMc)
+  ) {
     ratio = currentMc / referenceEntryMc;
     trackingSource = "fallback MC";
   } else if (validTrackingRatio(priceRatio)) {
