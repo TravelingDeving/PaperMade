@@ -1,5 +1,20 @@
 # Changelog
 
+## Website v4.8.3
+- Keeps the v4.8.2 live mobile beta.
+- Publishes Overlay v0.10.7 through the official install flow.
+- Fixes the prior v0.10.6 nested-folder ZIP that could cause “Manifest file is missing or unreadable” after extraction.
+- No new SQL is required.
+
+## Overlay v0.10.7 — Live P&L + Markers Fix
+- Active-page P&L now prefers higher-resolution live price/reference movement at all market caps instead of depending on a rounded or stale visible MC label.
+- Retains platform MC for visible MC / Avg Buy MC labels.
+- Restores reliable canvas/TradingView chart-surface preference before broader wrapper detection.
+- Candle-aware marker geometry can no longer suppress a fresh B/S marker when its estimate falls out of bounds.
+- Marker lookup survives pair/route to canonical-token address changes by falling back to the active position trade ID.
+- Buy/Sell triggers an immediate on-chart marker re-render.
+- Extension ZIP now places `manifest.json` directly at the extracted package root for Load unpacked.
+
 ## Website v4.6.4
 - Publishes Overlay v0.10.6 through the official install flow.
 - Uses the descriptive download filename `PaperMade-v0.10.6-HIGH-MC-PNL-PRECISION.zip` instead of a generic FULL-DROP-IN release name.
